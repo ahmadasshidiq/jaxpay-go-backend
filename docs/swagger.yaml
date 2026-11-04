@@ -254,13 +254,12 @@ info:
   title: JaxPay API
   version: "1.0"
 paths:
-  /callbacks/{provider}/payment:
+  /callbacks/{provider}/inquiry:
     post:
       consumes:
       - application/json
-      description: 'Endpoint publik untuk provider: /espay/payment (notifikasi pembayaran)
-        dan /espay/inquiry. Signature diverifikasi oleh adapter provider; balasan
-        mengikuti format provider.'
+      description: Provider menanyakan detail tagihan (mis. Espay service code 24).
+        Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.
       parameters:
       - description: Provider
         enum:
@@ -300,7 +299,55 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/callbacks.SNAPResponse'
-      summary: Callback dari provider
+      summary: Callback inquiry dari provider
+      tags:
+      - Callbacks
+  /callbacks/{provider}/payment:
+    post:
+      consumes:
+      - application/json
+      description: Notifikasi pembayaran / perubahan status dari provider. Signature
+        diverifikasi oleh adapter provider; balasan mengikuti format provider.
+      parameters:
+      - description: Provider
+        enum:
+        - espay
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Timestamp ISO-8601
+        in: header
+        name: X-TIMESTAMP
+        required: true
+        type: string
+      - description: SHA256withRSA signature (public key provider)
+        in: header
+        name: X-SIGNATURE
+        required: true
+        type: string
+      - description: Payload provider
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+      summary: Callback payment dari provider
       tags:
       - Callbacks
   /clients:

@@ -8,9 +8,9 @@
     },
     "basePath": "/api/v1",
     "paths": {
-        "/callbacks/{provider}/payment": {
+        "/callbacks/{provider}/inquiry": {
             "post": {
-                "description": "Endpoint publik untuk provider: /espay/payment (notifikasi pembayaran) dan /espay/inquiry. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.",
+                "description": "Provider menanyakan detail tagihan (mis. Espay service code 24). Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.",
                 "consumes": [
                     "application/json"
                 ],
@@ -20,7 +20,77 @@
                 "tags": [
                     "Callbacks"
                 ],
-                "summary": "Callback dari provider",
+                "summary": "Callback inquiry dari provider",
+                "parameters": [
+                    {
+                        "enum": [
+                            "espay"
+                        ],
+                        "type": "string",
+                        "description": "Provider",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Timestamp ISO-8601",
+                        "name": "X-TIMESTAMP",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SHA256withRSA signature (public key provider)",
+                        "name": "X-SIGNATURE",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload provider",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/callbacks/{provider}/payment": {
+            "post": {
+                "description": "Notifikasi pembayaran / perubahan status dari provider. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Callbacks"
+                ],
+                "summary": "Callback payment dari provider",
                 "parameters": [
                     {
                         "enum": [

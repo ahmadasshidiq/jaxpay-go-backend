@@ -11,5 +11,5 @@ func RegisterCallbackModule(router *gin.RouterGroup, db *gorm.DB) {
 	g := router.Group("/callbacks/:provider")
 	g.POST("/payment", c.Handle)
 	g.POST("/notify", c.Handle)
-	g.POST("/inquiry", c.Handle)
+	g.POST("/inquiry", c.Inquiry)
 }

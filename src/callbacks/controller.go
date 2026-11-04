@@ -27,9 +27,25 @@ func readBody(x *gin.Context) ([]byte, bool) {
 	return b, true
 }
 
+// Inquiry godoc
+// @Summary      Callback inquiry dari provider
+// @Description  Provider menanyakan detail tagihan (mis. Espay service code 24). Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.
+// @Tags         Callbacks
+// @Accept       json
+// @Produce      json
+// @Param        provider path string true "Provider" Enums(espay)
+// @Param        X-TIMESTAMP header string true "Timestamp ISO-8601"
+// @Param        X-SIGNATURE header string true "SHA256withRSA signature (public key provider)"
+// @Param        body body object true "Payload provider"
+// @Success      200 {object} SNAPResponse
+// @Failure      401 {object} SNAPResponse
+// @Failure      404 {object} SNAPResponse
+// @Router       /callbacks/{provider}/inquiry [post]
+func (c *CallbackController) Inquiry(x *gin.Context) { c.Handle(x) }
+
 // Handle godoc
-// @Summary      Callback dari provider
-// @Description  Endpoint publik untuk provider: /espay/payment (notifikasi pembayaran) dan /espay/inquiry. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.
+// @Summary      Callback payment dari provider
+// @Description  Notifikasi pembayaran / perubahan status dari provider. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.
 // @Tags         Callbacks
 // @Accept       json
 // @Produce      json
