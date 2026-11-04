@@ -68,7 +68,10 @@ func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.Callb
 		case p.Status != models.StatusPending || expired:
 			return providers.ErrPaymentExpired
 		}
-		ev.Bill = &providers.Bill{CustomerName: p.CustomerName, Amount: p.Amount}
+		ev.Bill = &providers.Bill{
+			CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail, Description: p.Description,
+			Amount: p.Amount, CreatedAt: p.CreatedAt, ExpiredAt: p.ExpiredAt,
+		}
 		return nil
 	}
 

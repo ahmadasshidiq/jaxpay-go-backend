@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/callbacks/{provider}/qris/notify": {
+        "/callbacks/{provider}/payment": {
             "post": {
-                "description": "Endpoint publik untuk provider: /espay/qris/notify. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.",
+                "description": "Endpoint publik untuk provider: /espay/payment (notifikasi pembayaran) dan /espay/inquiry. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.",
                 "consumes": [
                     "application/json"
                 ],

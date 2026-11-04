@@ -28,14 +28,22 @@ type qrisNotify struct {
 // RelativeUrl untuk StringToSign = path request yang diterima JaxPay.
 func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.CallbackEvent, error) {
 	ev := &providers.CallbackEvent{Provider: name, Raw: body}
-	if !strings.HasSuffix(r.URL.Path, "/qris/notify") {
+	inquiry := isInquiryPath(r.URL.Path)
+	switch {
+	case inquiry:
+		ev.Type, ev.Endpoint = providers.CallbackInquiry, endpointVAInquiry
+	case strings.HasSuffix(r.URL.Path, "/payment"):
+		ev.Type, ev.Endpoint = providers.CallbackPayment, endpointQRISNotify
+	default:
 		return ev, providers.ErrInvalidRequest
 	}
-	ev.Type, ev.Endpoint = providers.CallbackPayment, endpointQRISNotify
 
 	ts := r.Header.Get("X-TIMESTAMP")
 	if !freshTimestamp(ts) || !c.verify(r.Method, r.URL.Path, body, ts, r.Header.Get("X-SIGNATURE")) {
 		return ev, providers.ErrInvalidSignature
+	}
+	if inquiry {
+		return ev, c.parseInquiry(ev, body)
 	}
 
 	var in qrisNotify
@@ -56,6 +64,9 @@ func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.Callbac
 
 // CallbackResponse membentuk balasan SNAP (service code 52 = QR MPM notify).
 func (c *Client) CallbackResponse(ev *providers.CallbackEvent, err error) (int, any) {
+	if ev.Endpoint == endpointVAInquiry {
+		return inquiryResponse(ev, err)
+	}
 	code, rc, msg := 200, "2005200", "Successful"
 	switch {
 	case err == nil:

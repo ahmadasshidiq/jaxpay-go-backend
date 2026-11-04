@@ -29,7 +29,7 @@ func readBody(x *gin.Context) ([]byte, bool) {
 
 // Handle godoc
 // @Summary      Callback dari provider
-// @Description  Endpoint publik untuk provider: /espay/qris/notify. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.
+// @Description  Endpoint publik untuk provider: /espay/payment (notifikasi pembayaran) dan /espay/inquiry. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.
 // @Tags         Callbacks
 // @Accept       json
 // @Produce      json
@@ -40,7 +40,7 @@ func readBody(x *gin.Context) ([]byte, bool) {
 // @Success      200 {object} SNAPResponse
 // @Failure      401 {object} SNAPResponse
 // @Failure      404 {object} SNAPResponse
-// @Router       /callbacks/{provider}/qris/notify [post]
+// @Router       /callbacks/{provider}/payment [post]
 func (c *CallbackController) Handle(x *gin.Context) {
 	b, ok := readBody(x)
 	if !ok {

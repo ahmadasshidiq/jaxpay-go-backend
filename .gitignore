@@ -22,3 +22,6 @@ vendor/
 .vscode/
 *.swp
 .DS_Store
+
+# Internal docs
+JAXPAY_ARCHITECTURE.md

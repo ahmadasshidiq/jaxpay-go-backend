@@ -80,8 +80,12 @@ type CallbackEvent struct {
 }
 
 type Bill struct {
-	CustomerName string
-	Amount       int64
+	CustomerName  string
+	CustomerEmail string
+	Description   string
+	Amount        int64
+	CreatedAt     time.Time
+	ExpiredAt     *time.Time
 }
 
 var (
