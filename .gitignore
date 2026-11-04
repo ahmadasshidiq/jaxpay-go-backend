@@ -25,3 +25,6 @@ vendor/
 
 # Internal docs
 JAXPAY_ARCHITECTURE.md
+
+# Deploy config (per server)
+ecosystem.config.cjs
