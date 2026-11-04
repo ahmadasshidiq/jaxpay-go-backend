@@ -155,6 +155,79 @@ const docTemplate = `{
                 }
             }
         },
+        "/callbacks/{provider}/settlement": {
+            "post": {
+                "description": "Informasi pelunasan dana ke merchant (Espay Settlement Notification). Body form-urlencoded, divalidasi dengan password merchant. Tidak mengubah status payment.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Callbacks"
+                ],
+                "summary": "Callback settlement dari provider",
+                "parameters": [
+                    {
+                        "enum": [
+                            "espay"
+                        ],
+                        "type": "string",
+                        "description": "Provider",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "rq_uuid",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "yyyy-MM-dd hh:mi:ss",
+                        "name": "rq_datetime",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Password merchant",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON: tx_id, payment_id, settlement_amount, settlement_date, settlement_remark",
+                        "name": "data",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Hash-based signature",
+                        "name": "signature",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/clients": {
             "get": {
                 "security": [

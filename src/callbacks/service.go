@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"time"
 
 	"jaxpay-go-backend/libs/helpers"
@@ -51,6 +52,9 @@ func (s *CallbackService) handle(provider string, r *http.Request, body []byte) 
 }
 
 func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.CallbackLog) error {
+	if ev.Type == providers.CallbackSettlement {
+		return nil // cukup tercatat di CallbackLog; tidak mengubah status payment
+	}
 	p, e := s.findPayment(ev)
 	if e != nil {
 		return e
@@ -142,6 +146,18 @@ func headersJSON(r *http.Request) datatypes.JSON {
 func payloadJSON(body []byte) datatypes.JSON {
 	if json.Valid(body) {
 		return datatypes.JSON(body)
+	}
+	// form-urlencoded (mis. settlement Espay): simpan sebagai objek, password disamarkan
+	if f, e := url.ParseQuery(string(body)); e == nil && len(f) > 0 {
+		m := map[string]string{}
+		for k := range f {
+			m[k] = f.Get(k)
+		}
+		if _, ok := m["password"]; ok {
+			m["password"] = "***"
+		}
+		b, _ := json.Marshal(m)
+		return datatypes.JSON(b)
 	}
 	b, _ := json.Marshal(string(body))
 	return datatypes.JSON(b)

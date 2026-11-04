@@ -43,6 +43,22 @@ func readBody(x *gin.Context) ([]byte, bool) {
 // @Router       /callbacks/{provider}/inquiry [post]
 func (c *CallbackController) Inquiry(x *gin.Context) { c.Handle(x) }
 
+// Settlement godoc
+// @Summary      Callback settlement dari provider
+// @Description  Informasi pelunasan dana ke merchant (Espay Settlement Notification). Body form-urlencoded, divalidasi dengan password merchant. Tidak mengubah status payment.
+// @Tags         Callbacks
+// @Accept       x-www-form-urlencoded
+// @Produce      json
+// @Param        provider path string true "Provider" Enums(espay)
+// @Param        rq_uuid formData string true "Request ID"
+// @Param        rq_datetime formData string true "yyyy-MM-dd hh:mi:ss"
+// @Param        password formData string true "Password merchant"
+// @Param        data formData string true "JSON: tx_id, payment_id, settlement_amount, settlement_date, settlement_remark"
+// @Param        signature formData string true "Hash-based signature"
+// @Success      200 {object} map[string]string
+// @Router       /callbacks/{provider}/settlement [post]
+func (c *CallbackController) Settlement(x *gin.Context) { c.Handle(x) }
+
 // Handle godoc
 // @Summary      Callback payment dari provider
 // @Description  Notifikasi pembayaran / perubahan status dari provider. Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.

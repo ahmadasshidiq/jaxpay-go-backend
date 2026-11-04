@@ -28,6 +28,9 @@ type qrisNotify struct {
 // RelativeUrl untuk StringToSign = path request yang diterima JaxPay.
 func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.CallbackEvent, error) {
 	ev := &providers.CallbackEvent{Provider: name, Raw: body}
+	if isSettlementPath(r.URL.Path) {
+		return ev, c.parseSettlement(ev, body) // form-urlencoded + password, bukan SNAP
+	}
 	inquiry := isInquiryPath(r.URL.Path)
 	switch {
 	case inquiry:
@@ -64,8 +67,11 @@ func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.Callbac
 
 // CallbackResponse membentuk balasan SNAP (service code 52 = QR MPM notify).
 func (c *Client) CallbackResponse(ev *providers.CallbackEvent, err error) (int, any) {
-	if ev.Endpoint == endpointVAInquiry {
+	switch ev.Endpoint {
+	case endpointVAInquiry:
 		return inquiryResponse(ev, err)
+	case endpointSettlement:
+		return settlementResponse(ev, err)
 	}
 	code, rc, msg := 200, "2005200", "Successful"
 	switch {

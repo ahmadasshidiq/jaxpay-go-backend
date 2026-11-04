@@ -15,6 +15,8 @@ type EspayConfig struct {
 	ChannelID      string
 	PrivateKeyPath string // private key merchant
 	PublicKeyPath  string // public key Espay
+	Password       string // password merchant dari Espay (settlement notification)
+	SignatureKey   string // signature key dari Espay (hash-based signature)
 }
 
 func (c EspayConfig) Enabled() bool { return c.BaseURL != "" && c.PartnerID != "" }
@@ -52,6 +54,8 @@ func Get() *Config {
 				ChannelID:      env("ESPAY_CHANNEL_ID", ""),
 				PrivateKeyPath: env("ESPAY_PRIVATE_KEY_PATH", ""),
 				PublicKeyPath:  env("ESPAY_PUBLIC_KEY_PATH", ""),
+				Password:       env("ESPAY_PASSWORD", ""),
+				SignatureKey:   env("ESPAY_SIGNATURE_KEY", ""),
 			},
 		}
 	})

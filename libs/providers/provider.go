@@ -62,8 +62,9 @@ type StatusResult struct {
 }
 
 const (
-	CallbackInquiry = "inquiry" // provider menanyakan tagihan (VA)
-	CallbackPayment = "payment" // notifikasi pembayaran / perubahan status
+	CallbackInquiry    = "inquiry"    // provider menanyakan tagihan (VA)
+	CallbackPayment    = "payment"    // notifikasi pembayaran / perubahan status
+	CallbackSettlement = "settlement" // informasi pelunasan dana ke merchant (tidak mengubah status payment)
 )
 
 type CallbackEvent struct {
