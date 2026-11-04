@@ -1,0 +1,1018 @@
+basePath: /api/v1
+definitions:
+  callbacks.SNAPResponse:
+    properties:
+      responseCode:
+        type: string
+      responseMessage:
+        type: string
+    type: object
+  clients.CreateDTO:
+    properties:
+      callback_url:
+        maxLength: 500
+        type: string
+      code:
+        maxLength: 50
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        type: string
+      va_prefix:
+        maxLength: 10
+        type: string
+    required:
+    - callback_url
+    - code
+    - name
+    type: object
+  clients.CredentialsDTO:
+    properties:
+      api_key:
+        type: string
+      api_secret:
+        type: string
+      id:
+        type: string
+      webhook_secret:
+        type: string
+    type: object
+  clients.UpdateDTO:
+    properties:
+      callback_url:
+        maxLength: 500
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        type: string
+      va_prefix:
+        maxLength: 10
+        type: string
+    type: object
+  helpers.PaginatedResult:
+    properties:
+      items: {}
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  helpers.Response:
+    properties:
+      data: {}
+      error:
+        type: string
+      module:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.Client:
+    properties:
+      api_key:
+        type: string
+      callback_url:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+      va_prefix:
+        type: string
+    type: object
+  models.PaymentStatus:
+    enum:
+    - PENDING
+    - PAID
+    - EXPIRED
+    - FAILED
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - StatusPending
+    - StatusPaid
+    - StatusExpired
+    - StatusFailed
+    - StatusCancelled
+  models.ProviderRoute:
+    properties:
+      client_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      method:
+        type: string
+      provider:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.WebhookLog:
+    properties:
+      attempt:
+        type: integer
+      client_id:
+        type: string
+      created_at:
+        type: string
+      event:
+        type: string
+      id:
+        type: string
+      next_retry_at:
+        type: string
+      payload:
+        type: object
+      payment_id:
+        type: string
+      response_body:
+        type: string
+      response_code:
+        type: integer
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  payments.CreatePaymentDTO:
+    properties:
+      amount:
+        minimum: 1
+        type: integer
+      customer_email:
+        type: string
+      customer_name:
+        maxLength: 255
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      expired_minutes:
+        maximum: 10080
+        minimum: 5
+        type: integer
+      metadata:
+        additionalProperties: {}
+        type: object
+      method:
+        enum:
+        - qris
+        type: string
+      reference_id:
+        maxLength: 100
+        type: string
+    required:
+    - amount
+    - customer_name
+    - method
+    - reference_id
+    type: object
+  payments.PaymentResponse:
+    properties:
+      amount:
+        type: integer
+      created_at:
+        type: string
+      currency:
+        type: string
+      customer_email:
+        type: string
+      customer_name:
+        type: string
+      description:
+        type: string
+      expired_at:
+        type: string
+      id:
+        type: string
+      metadata:
+        type: object
+      method:
+        type: string
+      paid_at:
+        type: string
+      provider:
+        type: string
+      qr_string:
+        type: string
+      reference_id:
+        type: string
+      status:
+        $ref: '#/definitions/models.PaymentStatus'
+      va_number:
+        type: string
+    type: object
+  providerroutes.CreateDTO:
+    properties:
+      client_id:
+        type: string
+      is_active:
+        type: boolean
+      method:
+        enum:
+        - qris
+        type: string
+      provider:
+        maxLength: 50
+        type: string
+    required:
+    - client_id
+    - method
+    - provider
+    type: object
+  providerroutes.UpdateDTO:
+    properties:
+      is_active:
+        type: boolean
+      provider:
+        maxLength: 50
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Payment gateway terpusat untuk JaxLab, JAHRIS dan Qrupi.
+  title: JaxPay API
+  version: "1.0"
+paths:
+  /callbacks/{provider}/qris/notify:
+    post:
+      consumes:
+      - application/json
+      description: 'Endpoint publik untuk provider: /espay/qris/notify. Signature
+        diverifikasi oleh adapter provider; balasan mengikuti format provider.'
+      parameters:
+      - description: Provider
+        enum:
+        - espay
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Timestamp ISO-8601
+        in: header
+        name: X-TIMESTAMP
+        required: true
+        type: string
+      - description: SHA256withRSA signature (public key provider)
+        in: header
+        name: X-SIGNATURE
+        required: true
+        type: string
+      - description: Payload provider
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+      summary: Callback dari provider
+      tags:
+      - Callbacks
+  /clients:
+    get:
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Sort, mis. -created_at
+        in: query
+        name: sort
+        type: string
+      - description: Cari code / name
+        in: query
+        name: search
+        type: string
+      - description: Filter aktif
+        in: query
+        name: is_active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/helpers.PaginatedResult'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/models.Client'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List client app
+      tags:
+      - Clients
+    post:
+      consumes:
+      - application/json
+      description: Mengembalikan api_key, api_secret dan webhook_secret. Secret hanya
+        ditampilkan sekali.
+      parameters:
+      - description: Client
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/clients.CreateDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/clients.CredentialsDTO'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Daftarkan client app
+      tags:
+      - Clients
+  /clients/{id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Hapus permanen
+        in: query
+        name: permanent
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Archive / hapus client app
+      tags:
+      - Clients
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Client'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Detail client app
+      tags:
+      - Clients
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Field yang diubah
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/clients.UpdateDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Client'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Update client app
+      tags:
+      - Clients
+  /clients/{id}/rotate-secret:
+    post:
+      description: Credential lama langsung tidak berlaku.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/clients.CredentialsDTO'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Rotasi API key & secret
+      tags:
+      - Clients
+  /payments:
+    get:
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit (maks 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Sort, mis. -created_at
+        in: query
+        name: sort
+        type: string
+      - description: Status
+        enum:
+        - PENDING
+        - PAID
+        - EXPIRED
+        - FAILED
+        - CANCELLED
+        in: query
+        name: status
+        type: string
+      - description: Method
+        enum:
+        - qris
+        in: query
+        name: method
+        type: string
+      - description: Reference ID
+        in: query
+        name: reference_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/helpers.PaginatedResult'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/payments.PaymentResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - ClientAPIKey: []
+      summary: List transaksi milik client
+      tags:
+      - Payments
+    post:
+      consumes:
+      - application/json
+      description: Membuat VA / QRIS. Idempotent berdasarkan reference_id (request
+        ulang mengembalikan payment yang sama dengan status 200).
+      parameters:
+      - description: Payment
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/payments.CreatePaymentDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/payments.PaymentResponse'
+              type: object
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/payments.PaymentResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - ClientAPIKey: []
+      summary: Buat transaksi pembayaran
+      tags:
+      - Payments
+  /payments/{id}:
+    get:
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/payments.PaymentResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - ClientAPIKey: []
+      summary: Detail + status transaksi
+      tags:
+      - Payments
+  /payments/{id}/cancel:
+    post:
+      description: Hanya untuk payment PENDING. Membatalkan QR di provider / menutup
+        VA.
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/payments.PaymentResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - ClientAPIKey: []
+      summary: Batalkan transaksi
+      tags:
+      - Payments
+  /payments/{id}/check-status:
+    post:
+      parameters:
+      - description: Payment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/payments.PaymentResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - ClientAPIKey: []
+      summary: Paksa cek status ke provider
+      tags:
+      - Payments
+  /provider-routes:
+    get:
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Sort
+        in: query
+        name: sort
+        type: string
+      - description: Client ID
+        in: query
+        name: client_id
+        type: string
+      - description: Method
+        in: query
+        name: method
+        type: string
+      - description: Provider
+        in: query
+        name: provider
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/helpers.PaginatedResult'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/models.ProviderRoute'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List mapping client + method → provider
+      tags:
+      - Provider Routes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Route
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/providerroutes.CreateDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Buat provider route
+      tags:
+      - Provider Routes
+  /provider-routes/{id}:
+    delete:
+      parameters:
+      - description: Route ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Hapus provider route
+      tags:
+      - Provider Routes
+    get:
+      parameters:
+      - description: Route ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ProviderRoute'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Detail provider route
+      tags:
+      - Provider Routes
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Route ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Field yang diubah
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/providerroutes.UpdateDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ProviderRoute'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Update provider route
+      tags:
+      - Provider Routes
+  /webhook-logs:
+    get:
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Sort
+        in: query
+        name: sort
+        type: string
+      - description: Payment ID
+        in: query
+        name: payment_id
+        type: string
+      - description: Client ID
+        in: query
+        name: client_id
+        type: string
+      - description: Event
+        in: query
+        name: event
+        type: string
+      - description: Status
+        enum:
+        - PENDING
+        - SUCCESS
+        - FAILED
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/helpers.PaginatedResult'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/models.WebhookLog'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Riwayat pengiriman webhook
+      tags:
+      - Webhook Logs
+  /webhook-logs/{id}:
+    get:
+      parameters:
+      - description: Webhook log ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.WebhookLog'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Detail webhook log
+      tags:
+      - Webhook Logs
+  /webhook-logs/{id}/retry:
+    post:
+      parameters:
+      - description: Webhook log ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.WebhookLog'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Retry manual pengiriman webhook
+      tags:
+      - Webhook Logs
+securityDefinitions:
+  BearerAuth:
+    description: '"Bearer <token>" untuk admin.'
+    in: header
+    name: Authorization
+    type: apiKey
+  ClientAPIKey:
+    description: API key client. Wajib juga X-Timestamp dan X-Signature (HMAC-SHA256).
+    in: header
+    name: X-API-Key
+    type: apiKey
+swagger: "2.0"

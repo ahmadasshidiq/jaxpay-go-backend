@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.*
+!.env.example
+keys/
+*.pem
+*.key
+
+# Build output
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Go
+vendor/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
