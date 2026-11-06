@@ -34,9 +34,10 @@ func (c *Client) CreateVA(ctx context.Context, req providers.CreateVARequest) (*
 	if req.BankCode == "" {
 		return nil, fmt.Errorf("%w: bank_code required", providers.ErrInvalidRequest)
 	}
-	b := make([]byte, 10)
-	_, _ = rand.Read(b)
-	orderID := "JXP" + strings.ToUpper(hex.EncodeToString(b))
+	orderID := req.ProviderRef
+	if orderID == "" {
+		orderID = providers.NewProviderRef()
+	}
 	rqUUID := newUUID()
 	rqDatetime := time.Now().In(wib).Format(dtLayout)
 	amt := fmt.Sprintf("%d.00", req.Amount)

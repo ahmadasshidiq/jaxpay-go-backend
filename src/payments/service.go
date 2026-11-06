@@ -118,6 +118,11 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 	if d.BankCode != "" {
 		p.BankCode = &d.BankCode
 	}
+	if d.Method == "va" {
+		// Espay memanggil callback inquiry (virtualAccountNo = order_id) sebelum sendinvoice selesai,
+		// jadi provider_ref harus sudah tersimpan saat insert.
+		p.ProviderRef = providers.NewProviderRef()
+	}
 	if d.Metadata != nil {
 		b, e := json.Marshal(d.Metadata)
 		if e != nil {
@@ -183,7 +188,7 @@ func (s *PaymentService) callProvider(ctx context.Context, prov providers.Provid
 	switch p.Method {
 	case "va":
 		r := providers.CreateVARequest{
-			ReferenceID: p.ReferenceID, Amount: p.Amount, CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail,
+			ProviderRef: p.ProviderRef, ReferenceID: p.ReferenceID, Amount: p.Amount, CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail,
 			CustomerPhone: p.CustomerPhone, Description: p.Description, ExpiredAt: *p.ExpiredAt,
 		}
 		if p.BankCode != nil {

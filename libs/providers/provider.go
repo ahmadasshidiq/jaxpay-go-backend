@@ -2,9 +2,12 @@ package providers
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +24,13 @@ type Provider interface {
 	CallbackResponse(ev *CallbackEvent, err error) (int, any)           // format balasan sesuai spec provider
 }
 
+// NewProviderRef membuat id transaksi ke provider: "JXP" + 20 hex uppercase (alfanumerik, 23 karakter).
+func NewProviderRef() string {
+	b := make([]byte, 10)
+	_, _ = rand.Read(b)
+	return "JXP" + strings.ToUpper(hex.EncodeToString(b))
+}
+
 var (
 	ErrNotSupported     = errors.New("method not supported by provider")
 	ErrInvalidSignature = errors.New("invalid signature")
@@ -32,6 +42,7 @@ var (
 )
 
 type CreateVARequest struct {
+	ProviderRef   string // order_id ke provider; sudah tersimpan di DB sebelum request agar callback inquiry menemukannya
 	ReferenceID   string
 	Amount        int64
 	CustomerName  string

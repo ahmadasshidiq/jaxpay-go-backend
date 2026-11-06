@@ -26,12 +26,12 @@ func TestCreateVASendInvoice(t *testing.T) {
 
 	c := &Client{cfg: config.EspayConfig{BaseURL: srv.URL, MerchantID: "SGWYESSISHOP", SignatureKey: "secret"}, http: srv.Client()}
 	res, e := c.CreateVA(context.Background(), providers.CreateVARequest{
-		Amount: 150000, CustomerName: "Yessi Shop!", BankCode: "014", ExpiredAt: time.Now().Add(time.Hour),
+		ProviderRef: "JXPABC123", Amount: 150000, CustomerName: "Yessi Shop!", BankCode: "014", ExpiredAt: time.Now().Add(time.Hour),
 	})
 	if e != nil {
 		t.Fatal(e)
 	}
-	if *res.VANumber != "8920800000012345" || res.ProviderRef != got.Get("order_id") {
+	if *res.VANumber != "8920800000012345" || res.ProviderRef != "JXPABC123" || got.Get("order_id") != "JXPABC123" {
 		t.Fatalf("result %+v", res)
 	}
 	if got.Get("amount") != "150000.00" || got.Get("remark2") != "Yessi Shop" || got.Get("va_expired") != "60" || got.Get("update") != "N" {
