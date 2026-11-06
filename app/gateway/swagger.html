@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JaxPay API Docs</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css">
+  <style>
+    body { margin: 0; }
+    .signer { display: flex; gap: 8px; align-items: center; padding: 10px 16px; background: #1b1b1b; color: #fff; font: 14px sans-serif; flex-wrap: wrap; }
+    .signer input { padding: 6px 8px; min-width: 260px; }
+    .signer small { color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="signer">
+    <label for="secret">Client API Secret</label>
+    <input id="secret" type="password" placeholder="api_secret client (hanya disimpan di tab ini)">
+    <small>X-Timestamp &amp; X-Signature dihitung otomatis untuk request yang memakai X-API-Key (isi API key di tombol Authorize).</small>
+  </div>
+  <div id="swagger-ui"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+  <script>
+    const secretInput = document.getElementById('secret');
+    try { secretInput.value = sessionStorage.getItem('jaxpay_secret') || ''; } catch (e) {}
+    secretInput.addEventListener('input', () => {
+      try { sessionStorage.setItem('jaxpay_secret', secretInput.value); } catch (e) {}
+    });
+
+    // hex(HMAC-SHA256(secret, timestamp.METHOD.request_uri.body)), sama dengan ClientAuthMiddleware
+    async function hmacHex(secret, msg) {
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+      const sig = await crypto.subtle.sign('HMAC', key, enc.encode(msg));
+      return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    SwaggerUIBundle({
+      url: '/swagger/doc.json',
+      dom_id: '#swagger-ui',
+      persistAuthorization: true,
+      requestInterceptor: async (req) => {
+        const hasKey = Object.keys(req.headers).some(h => h.toLowerCase() === 'x-api-key');
+        const secret = secretInput.value;
+        if (!hasKey || !secret) return req;
+        const u = new URL(req.url, location.origin);
+        const body = typeof req.body === 'string' ? req.body : '';
+        const ts = Math.floor(Date.now() / 1000).toString();
+        req.headers['X-Timestamp'] = ts;
+        req.headers['X-Signature'] = await hmacHex(secret, ts + '.' + req.method.toUpperCase() + '.' + u.pathname + u.search + '.' + body);
+        return req;
+      },
+    });
+  </script>
+</body>
+</html>

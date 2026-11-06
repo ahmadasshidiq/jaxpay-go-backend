@@ -23,6 +23,7 @@ type EspayConfig struct {
 func (c EspayConfig) Enabled() bool { return c.BaseURL != "" && c.PartnerID != "" }
 
 type Config struct {
+	AppEnv             string
 	AppPort            string
 	DatabaseURL        string
 	JWTSecret          string
@@ -42,6 +43,7 @@ func Get() *Config {
 	once.Do(func() {
 		_ = godotenv.Load()
 		cfg = &Config{
+			AppEnv:             env("APP_ENV", "development"),
 			AppPort:            env("APP_PORT", "8080"),
 			DatabaseURL:        env("POSTGRES_DSN_DEV", ""),
 			JWTSecret:          env("JWT_SECRET", ""),
