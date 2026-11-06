@@ -45,7 +45,7 @@ func (c *CallbackController) Inquiry(x *gin.Context) { c.Handle(x) }
 
 // Settlement godoc
 // @Summary      Callback settlement dari provider
-// @Description  Informasi pelunasan dana ke merchant (Espay Settlement Notification). Body form-urlencoded, divalidasi dengan password merchant. Tidak mengubah status payment.
+// @Description  Informasi pelunasan dana ke merchant (Espay Settlement Notification). Body form-urlencoded, divalidasi dengan password merchant dan signature sha1(md5(rq_uuid + rq_datetime + sender_id + receiver_id)). Tidak mengubah status payment.
 // @Tags         Callbacks
 // @Accept       x-www-form-urlencoded
 // @Produce      json
@@ -54,6 +54,8 @@ func (c *CallbackController) Inquiry(x *gin.Context) { c.Handle(x) }
 // @Param        rq_datetime formData string true "yyyy-MM-dd hh:mi:ss"
 // @Param        password formData string true "Password merchant"
 // @Param        data formData string true "JSON: tx_id, payment_id, settlement_amount, settlement_date, settlement_remark"
+// @Param        sender_id formData string false "Sender ID (default GOWORLDPG)"
+// @Param        receiver_id formData string false "Receiver ID / comm_code (default ESPAY_MERCHANT_ID)"
 // @Param        signature formData string true "Hash-based signature"
 // @Success      200 {object} map[string]string
 // @Router       /callbacks/{provider}/settlement [post]
