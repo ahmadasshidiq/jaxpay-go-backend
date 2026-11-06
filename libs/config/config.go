@@ -17,6 +17,7 @@ type EspayConfig struct {
 	PublicKeyPath  string // public key Espay
 	Password       string // password merchant dari Espay (settlement notification)
 	SignatureKey   string // signature key dari Espay (hash-based signature)
+	MerchantPGURL  string // base URL Direct API (sendinvoice); default BaseURL
 }
 
 func (c EspayConfig) Enabled() bool { return c.BaseURL != "" && c.PartnerID != "" }
@@ -56,6 +57,7 @@ func Get() *Config {
 				PublicKeyPath:  env("ESPAY_PUBLIC_KEY_PATH", ""),
 				Password:       env("ESPAY_PASSWORD", ""),
 				SignatureKey:   env("ESPAY_SIGNATURE_KEY", ""),
+				MerchantPGURL:  env("ESPAY_MERCHANTPG_URL", ""),
 			},
 		}
 	})

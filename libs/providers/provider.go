@@ -32,12 +32,15 @@ var (
 )
 
 type CreateVARequest struct {
-	ReferenceID  string
-	Amount       int64
-	CustomerName string
-	Description  string
-	VAPrefix     string
-	ExpiredAt    time.Time
+	ReferenceID   string
+	Amount        int64
+	CustomerName  string
+	CustomerEmail string
+	CustomerPhone string
+	Description   string
+	BankCode      string // kode bank provider, mis. 014 (BCA)
+	VAPrefix      string
+	ExpiredAt     time.Time
 }
 
 type CreateQRISRequest struct {

@@ -21,6 +21,7 @@ var (
 	errNotPending      = errors.New("payment is not pending")
 	errRefConflict     = errors.New("reference_id already used with different method or amount")
 	errProviderFailure = errors.New("provider request failed")
+	errInvalidBank     = errors.New("bank_code not supported by provider")
 )
 
 const defaultExpiredMinutes = 24 * 60
@@ -93,6 +94,15 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 	if e != nil {
 		return nil, false, errRouteNotFound
 	}
+	if d.Method == "va" {
+		var n int64
+		if e = s.vaBankQuery(prov.Name()).Where("bank_code = ?", d.BankCode).Count(&n).Error; e != nil {
+			return nil, false, e
+		}
+		if n == 0 {
+			return nil, false, errInvalidBank
+		}
+	}
 
 	minutes := d.ExpiredMinutes
 	if minutes == 0 {
@@ -102,8 +112,11 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 	p := &models.Payment{
 		ClientID: client.ID, ReferenceID: d.ReferenceID, Method: d.Method, Provider: prov.Name(),
 		Amount: d.Amount, Currency: "IDR", Status: models.StatusPending,
-		CustomerName: d.CustomerName, CustomerEmail: d.CustomerEmail, Description: d.Description,
-		ExpiredAt: &expiredAt,
+		CustomerName: d.CustomerName, CustomerEmail: d.CustomerEmail, CustomerPhone: d.CustomerPhone,
+		Description: d.Description, ExpiredAt: &expiredAt,
+	}
+	if d.BankCode != "" {
+		p.BankCode = &d.BankCode
 	}
 	if d.Metadata != nil {
 		b, e := json.Marshal(d.Metadata)
@@ -147,8 +160,36 @@ func (s *PaymentService) replay(v *models.Payment, d CreatePaymentDTO, e error) 
 	return v, false, nil
 }
 
+func (s *PaymentService) vaBankQuery(provider string) *gorm.DB {
+	return s.DB.Model(&models.ProviderBank{}).Where("provider = ? AND is_va = ? AND is_active = ?", provider, true, true)
+}
+
+// vaBanks mengembalikan bank VA aktif dari provider route VA aktif milik client.
+func (s *PaymentService) vaBanks(clientID uuid.UUID) ([]VABankResponse, error) {
+	var route models.ProviderRoute
+	e := s.DB.Where("client_id = ? AND method = ? AND is_active = ?", clientID, "va", true).First(&route).Error
+	if errors.Is(e, gorm.ErrRecordNotFound) {
+		return nil, errRouteNotFound
+	}
+	if e != nil {
+		return nil, e
+	}
+	v := []VABankResponse{}
+	e = s.vaBankQuery(route.Provider).Select("bank_code", "name", "product_code").Order("name").Scan(&v).Error
+	return v, e
+}
+
 func (s *PaymentService) callProvider(ctx context.Context, prov providers.Provider, p *models.Payment) (*providers.PaymentResult, error) {
 	switch p.Method {
+	case "va":
+		r := providers.CreateVARequest{
+			ReferenceID: p.ReferenceID, Amount: p.Amount, CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail,
+			CustomerPhone: p.CustomerPhone, Description: p.Description, ExpiredAt: *p.ExpiredAt,
+		}
+		if p.BankCode != nil {
+			r.BankCode = *p.BankCode
+		}
+		return prov.CreateVA(ctx, r)
 	case "qris":
 		return prov.CreateQRIS(ctx, providers.CreateQRISRequest{
 			ReferenceID: p.ReferenceID, Amount: p.Amount, Description: p.Description, ExpiredAt: *p.ExpiredAt,

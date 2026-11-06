@@ -36,6 +36,20 @@ type ProviderRoute struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+// ProviderBank = master produk / bank per provider (mis. daftar produk Espay).
+type ProviderBank struct {
+	ID          uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Provider    string         `gorm:"size:50;uniqueIndex:idx_provider_product" json:"provider"`
+	ProductCode string         `gorm:"size:50;uniqueIndex:idx_provider_product" json:"product_code"`
+	Name        string         `gorm:"size:100" json:"name"`
+	BankCode    string         `gorm:"size:10;index" json:"bank_code"`
+	IsVA        bool           `gorm:"default:false" json:"is_va"`
+	IsActive    bool           `gorm:"default:true" json:"is_active"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
 type PaymentStatus string
 
 const (
@@ -57,9 +71,11 @@ type Payment struct {
 	Currency      string         `gorm:"size:3;default:IDR" json:"currency"`
 	Status        PaymentStatus  `gorm:"size:20;index" json:"status"`
 	VANumber      *string        `gorm:"size:50;index" json:"va_number"`
+	BankCode      *string        `gorm:"size:10" json:"bank_code"`
 	QRString      *string        `gorm:"type:text" json:"qr_string"`
 	CustomerName  string         `gorm:"size:255" json:"customer_name"`
 	CustomerEmail string         `gorm:"size:255" json:"customer_email"`
+	CustomerPhone string         `gorm:"size:20" json:"customer_phone"`
 	Description   string         `gorm:"size:500" json:"description"`
 	Metadata      datatypes.JSON `json:"metadata" swaggertype:"object"`
 	ExpiredAt     *time.Time     `json:"expired_at"`
@@ -104,5 +120,5 @@ type WebhookLog struct {
 }
 
 func AllModels() []any {
-	return []any{&Client{}, &ProviderRoute{}, &Payment{}, &CallbackLog{}, &WebhookLog{}}
+	return []any{&Client{}, &ProviderRoute{}, &ProviderBank{}, &Payment{}, &CallbackLog{}, &WebhookLog{}}
 }

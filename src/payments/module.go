@@ -12,6 +12,7 @@ func RegisterPaymentModule(router *gin.RouterGroup, db *gorm.DB) {
 	g := router.Group("/payments", cryptography.ClientAuthMiddleware(db))
 	g.POST("", c.Create)
 	g.GET("", c.GetAll)
+	g.GET("/va-banks", c.VABanks)
 	g.GET("/:id", c.GetByID)
 	g.POST("/:id/cancel", c.Cancel)
 	g.POST("/:id/check-status", c.CheckStatus)

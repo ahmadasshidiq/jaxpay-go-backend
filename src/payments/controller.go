@@ -28,7 +28,7 @@ func clientID(x *gin.Context) uuid.UUID {
 
 func respondServiceError(x *gin.Context, e error) {
 	switch {
-	case errors.Is(e, errRouteNotFound), errors.Is(e, providers.ErrNotSupported):
+	case errors.Is(e, errRouteNotFound), errors.Is(e, providers.ErrNotSupported), errors.Is(e, errInvalidBank):
 		helpers.RespondError(x, module, 422, e)
 	case errors.Is(e, errNotPending), errors.Is(e, errRefConflict):
 		helpers.RespondError(x, module, 409, e)
@@ -41,7 +41,7 @@ func respondServiceError(x *gin.Context, e error) {
 
 // Create godoc
 // @Summary      Buat transaksi pembayaran
-// @Description  Membuat VA / QRIS. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).
+// @Description  Membuat VA / QRIS. Untuk method "va", bank_code (3 digit kode bank Espay) wajib diisi. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).
 // @Tags         Payments
 // @Accept       json
 // @Produce      json
@@ -73,6 +73,24 @@ func (c *PaymentController) Create(x *gin.Context) {
 	helpers.RespondSuccess(x, module, code, toResponse(v))
 }
 
+// VABanks godoc
+// @Summary      Daftar bank Virtual Account
+// @Description  Bank VA yang didukung provider route VA aktif milik client. Gunakan bank_code saat membuat payment method "va".
+// @Tags         Payments
+// @Produce      json
+// @Success      200 {object} helpers.Response{data=[]VABankResponse}
+// @Failure      422 {object} helpers.Response
+// @Security     ClientAPIKey
+// @Router       /payments/va-banks [get]
+func (c *PaymentController) VABanks(x *gin.Context) {
+	v, e := c.Service.vaBanks(clientID(x))
+	if e != nil {
+		respondServiceError(x, e)
+		return
+	}
+	helpers.RespondSuccess(x, module, 200, v)
+}
+
 // GetAll godoc
 // @Summary      List transaksi milik client
 // @Tags         Payments
@@ -81,7 +99,7 @@ func (c *PaymentController) Create(x *gin.Context) {
 // @Param        limit query int false "Limit (maks 100)"
 // @Param        sort query string false "Sort, mis. -created_at"
 // @Param        status query string false "Status" Enums(PENDING, PAID, EXPIRED, FAILED, CANCELLED)
-// @Param        method query string false "Method" Enums(qris)
+// @Param        method query string false "Method" Enums(qris, va)
 // @Param        reference_id query string false "Reference ID"
 // @Success      200 {object} helpers.Response{data=helpers.PaginatedResult{items=[]PaymentResponse}}
 // @Failure      400 {object} helpers.Response

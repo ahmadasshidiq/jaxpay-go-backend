@@ -40,6 +40,9 @@ func main() {
 	if e = db.AutoMigrate(models.AllModels()...); e != nil {
 		log.Fatalf("migrate: %v", e)
 	}
+	if e = SeedProviderBanks(db); e != nil {
+		log.Fatalf("seed provider banks: %v", e)
+	}
 	if e = RegisterProviders(cfg); e != nil {
 		log.Fatalf("providers: %v", e)
 	}
