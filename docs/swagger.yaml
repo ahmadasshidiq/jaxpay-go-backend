@@ -110,6 +110,27 @@ definitions:
     - StatusExpired
     - StatusFailed
     - StatusCancelled
+  models.ProviderBank:
+    properties:
+      bank_code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_va:
+        type: boolean
+      name:
+        type: string
+      product_code:
+        type: string
+      provider:
+        type: string
+      updated_at:
+        type: string
+    type: object
   models.ProviderRoute:
     properties:
       client_id:
@@ -157,17 +178,30 @@ definitions:
   payments.CreatePaymentDTO:
     properties:
       amount:
+        example: 150000
         minimum: 1
         type: integer
+      bank_code:
+        description: wajib untuk method va
+        example: "014"
+        type: string
       customer_email:
+        example: budi.santoso@example.com
         type: string
       customer_name:
+        example: Budi Santoso
         maxLength: 255
         type: string
+      customer_phone:
+        example: "081234567890"
+        maxLength: 17
+        type: string
       description:
+        example: Pembayaran invoice INV-20261106-0001
         maxLength: 500
         type: string
       expired_minutes:
+        example: 60
         maximum: 10080
         minimum: 5
         type: integer
@@ -177,8 +211,11 @@ definitions:
       method:
         enum:
         - qris
+        - va
+        example: va
         type: string
       reference_id:
+        example: INV-20261106-0001
         maxLength: 100
         type: string
     required:
@@ -191,6 +228,8 @@ definitions:
     properties:
       amount:
         type: integer
+      bank_code:
+        type: string
       created_at:
         type: string
       currency:
@@ -222,6 +261,54 @@ definitions:
       va_number:
         type: string
     type: object
+  payments.VABankResponse:
+    properties:
+      bank_code:
+        type: string
+      name:
+        type: string
+      product_code:
+        type: string
+    type: object
+  providerbanks.CreateDTO:
+    properties:
+      bank_code:
+        example: "014"
+        type: string
+      is_active:
+        type: boolean
+      is_va:
+        type: boolean
+      name:
+        example: BCA VA Online
+        maxLength: 100
+        type: string
+      product_code:
+        example: BCAATM
+        maxLength: 50
+        type: string
+      provider:
+        example: espay
+        maxLength: 50
+        type: string
+    required:
+    - bank_code
+    - name
+    - product_code
+    - provider
+    type: object
+  providerbanks.UpdateDTO:
+    properties:
+      bank_code:
+        type: string
+      is_active:
+        type: boolean
+      is_va:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+    type: object
   providerroutes.CreateDTO:
     properties:
       client_id:
@@ -231,6 +318,7 @@ definitions:
       method:
         enum:
         - qris
+        - va
         type: string
       provider:
         maxLength: 50
@@ -355,8 +443,8 @@ paths:
       consumes:
       - application/x-www-form-urlencoded
       description: Informasi pelunasan dana ke merchant (Espay Settlement Notification).
-        Body form-urlencoded, divalidasi dengan password merchant. Tidak mengubah
-        status payment.
+        Body form-urlencoded, divalidasi dengan password merchant dan signature sha1(md5(rq_uuid
+        + rq_datetime + sender_id + receiver_id)). Tidak mengubah status payment.
       parameters:
       - description: Provider
         enum:
@@ -385,6 +473,14 @@ paths:
         in: formData
         name: data
         required: true
+        type: string
+      - description: Sender ID (default GOWORLDPG)
+        in: formData
+        name: sender_id
+        type: string
+      - description: Receiver ID / comm_code (default ESPAY_MERCHANT_ID)
+        in: formData
+        name: receiver_id
         type: string
       - description: Hash-based signature
         in: formData
@@ -633,6 +729,7 @@ paths:
       - description: Method
         enum:
         - qris
+        - va
         in: query
         name: method
         type: string
@@ -671,8 +768,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Membuat VA / QRIS. Idempotent berdasarkan reference_id (request
-        ulang mengembalikan payment yang sama dengan status 200).
+      description: Membuat VA / QRIS. Untuk method "va", bank_code (3 digit kode bank
+        Espay) wajib diisi. Idempotent berdasarkan reference_id (request ulang mengembalikan
+        payment yang sama dengan status 200).
       parameters:
       - description: Payment
         in: body
@@ -819,6 +917,210 @@ paths:
       summary: Paksa cek status ke provider
       tags:
       - Payments
+  /payments/va-banks:
+    get:
+      description: Bank VA yang didukung provider route VA aktif milik client. Gunakan
+        bank_code saat membuat payment method "va".
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/payments.VABankResponse'
+                  type: array
+              type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - ClientAPIKey: []
+      summary: Daftar bank Virtual Account
+      tags:
+      - Payments
+  /provider-banks:
+    get:
+      parameters:
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Sort
+        in: query
+        name: sort
+        type: string
+      - description: Provider, mis. espay
+        in: query
+        name: provider
+        type: string
+      - description: Kode bank
+        in: query
+        name: bank_code
+        type: string
+      - description: Hanya produk VA
+        in: query
+        name: is_va
+        type: boolean
+      - description: Status aktif
+        in: query
+        name: is_active
+        type: boolean
+      - description: Cari nama
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/helpers.PaginatedResult'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/models.ProviderBank'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: List master bank / produk provider
+      tags:
+      - Provider Banks
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bank
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/providerbanks.CreateDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Tambah master bank
+      tags:
+      - Provider Banks
+  /provider-banks/{id}:
+    delete:
+      parameters:
+      - description: Bank ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Hapus master bank
+      tags:
+      - Provider Banks
+    get:
+      parameters:
+      - description: Bank ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ProviderBank'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Detail master bank
+      tags:
+      - Provider Banks
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bank ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Field yang diubah
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/providerbanks.UpdateDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/helpers.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ProviderBank'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Response'
+      security:
+      - BearerAuth: []
+      summary: Update master bank
+      tags:
+      - Provider Banks
   /provider-routes:
     get:
       parameters:

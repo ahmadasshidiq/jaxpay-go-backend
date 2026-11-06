@@ -157,7 +157,7 @@ const docTemplate = `{
         },
         "/callbacks/{provider}/settlement": {
             "post": {
-                "description": "Informasi pelunasan dana ke merchant (Espay Settlement Notification). Body form-urlencoded, divalidasi dengan password merchant. Tidak mengubah status payment.",
+                "description": "Informasi pelunasan dana ke merchant (Espay Settlement Notification). Body form-urlencoded, divalidasi dengan password merchant dan signature sha1(md5(rq_uuid + rq_datetime + sender_id + receiver_id)). Tidak mengubah status payment.",
                 "consumes": [
                     "application/x-www-form-urlencoded"
                 ],
@@ -206,6 +206,18 @@ const docTemplate = `{
                         "name": "data",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sender ID (default GOWORLDPG)",
+                        "name": "sender_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Receiver ID / comm_code (default ESPAY_MERCHANT_ID)",
+                        "name": "receiver_id",
+                        "in": "formData"
                     },
                     {
                         "type": "string",
@@ -621,7 +633,8 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            "qris"
+                            "qris",
+                            "va"
                         ],
                         "type": "string",
                         "description": "Method",
@@ -683,7 +696,7 @@ const docTemplate = `{
                         "ClientAPIKey": []
                     }
                 ],
-                "description": "Membuat VA / QRIS. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).",
+                "description": "Membuat VA / QRIS. Untuk method \"va\", bank_code (3 digit kode bank Espay) wajib diisi. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).",
                 "consumes": [
                     "application/json"
                 ],
@@ -762,6 +775,52 @@ const docTemplate = `{
                     },
                     "502": {
                         "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/va-banks": {
+            "get": {
+                "security": [
+                    {
+                        "ClientAPIKey": []
+                    }
+                ],
+                "description": "Bank VA yang didukung provider route VA aktif milik client. Gunakan bank_code saat membuat payment method \"va\".",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Daftar bank Virtual Account",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/payments.VABankResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "$ref": "#/definitions/helpers.Response"
                         }
@@ -928,6 +987,304 @@ const docTemplate = `{
                     },
                     "502": {
                         "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/provider-banks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider Banks"
+                ],
+                "summary": "List master bank / produk provider",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Provider, mis. espay",
+                        "name": "provider",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Kode bank",
+                        "name": "bank_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Hanya produk VA",
+                        "name": "is_va",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Status aktif",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cari nama",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/helpers.PaginatedResult"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/models.ProviderBank"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider Banks"
+                ],
+                "summary": "Tambah master bank",
+                "parameters": [
+                    {
+                        "description": "Bank",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/providerbanks.CreateDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/provider-banks/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider Banks"
+                ],
+                "summary": "Detail master bank",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bank ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.ProviderBank"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider Banks"
+                ],
+                "summary": "Hapus master bank",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bank ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.Response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Provider Banks"
+                ],
+                "summary": "Update master bank",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bank ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Field yang diubah",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/providerbanks.UpdateDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/helpers.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.ProviderBank"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/helpers.Response"
                         }
@@ -1584,6 +1941,38 @@ const docTemplate = `{
                 "StatusCancelled"
             ]
         },
+        "models.ProviderBank": {
+            "type": "object",
+            "properties": {
+                "bank_code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_va": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_code": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ProviderRoute": {
             "type": "object",
             "properties": {
@@ -1662,23 +2051,38 @@ const docTemplate = `{
             "properties": {
                 "amount": {
                     "type": "integer",
-                    "minimum": 1
+                    "minimum": 1,
+                    "example": 150000
+                },
+                "bank_code": {
+                    "description": "wajib untuk method va",
+                    "type": "string",
+                    "example": "014"
                 },
                 "customer_email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "budi.santoso@example.com"
                 },
                 "customer_name": {
                     "type": "string",
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "example": "Budi Santoso"
+                },
+                "customer_phone": {
+                    "type": "string",
+                    "maxLength": 17,
+                    "example": "081234567890"
                 },
                 "description": {
                     "type": "string",
-                    "maxLength": 500
+                    "maxLength": 500,
+                    "example": "Pembayaran invoice INV-20261106-0001"
                 },
                 "expired_minutes": {
                     "type": "integer",
                     "maximum": 10080,
-                    "minimum": 5
+                    "minimum": 5,
+                    "example": 60
                 },
                 "metadata": {
                     "type": "object",
@@ -1687,12 +2091,15 @@ const docTemplate = `{
                 "method": {
                     "type": "string",
                     "enum": [
-                        "qris"
-                    ]
+                        "qris",
+                        "va"
+                    ],
+                    "example": "va"
                 },
                 "reference_id": {
                     "type": "string",
-                    "maxLength": 100
+                    "maxLength": 100,
+                    "example": "INV-20261106-0001"
                 }
             }
         },
@@ -1701,6 +2108,9 @@ const docTemplate = `{
             "properties": {
                 "amount": {
                     "type": "integer"
+                },
+                "bank_code": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -1749,6 +2159,74 @@ const docTemplate = `{
                 }
             }
         },
+        "payments.VABankResponse": {
+            "type": "object",
+            "properties": {
+                "bank_code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "product_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "providerbanks.CreateDTO": {
+            "type": "object",
+            "required": [
+                "bank_code",
+                "name",
+                "product_code",
+                "provider"
+            ],
+            "properties": {
+                "bank_code": {
+                    "type": "string",
+                    "example": "014"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_va": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "BCA VA Online"
+                },
+                "product_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "BCAATM"
+                },
+                "provider": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "espay"
+                }
+            }
+        },
+        "providerbanks.UpdateDTO": {
+            "type": "object",
+            "properties": {
+                "bank_code": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_va": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
         "providerroutes.CreateDTO": {
             "type": "object",
             "required": [
@@ -1766,7 +2244,8 @@ const docTemplate = `{
                 "method": {
                     "type": "string",
                     "enum": [
-                        "qris"
+                        "qris",
+                        "va"
                     ]
                 },
                 "provider": {
