@@ -64,6 +64,10 @@ func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.Callb
 	}
 	log.PaymentID = &p.ID
 	expired := p.ExpiredAt != nil && time.Now().After(*p.ExpiredAt)
+	bill := &providers.Bill{
+		CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail, Description: p.Description,
+		Amount: p.Amount, CreatedAt: p.CreatedAt, ExpiredAt: p.ExpiredAt,
+	}
 
 	if ev.Type == providers.CallbackInquiry {
 		switch {
@@ -72,12 +76,10 @@ func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.Callb
 		case p.Status != models.StatusPending || expired:
 			return providers.ErrPaymentExpired
 		}
-		ev.Bill = &providers.Bill{
-			CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail, Description: p.Description,
-			Amount: p.Amount, CreatedAt: p.CreatedAt, ExpiredAt: p.ExpiredAt,
-		}
+		ev.Bill = bill
 		return nil
 	}
+	ev.Bill = bill // data balasan payment VA
 
 	if p.Status == models.StatusPaid {
 		return nil // idempotent: callback ulang untuk payment yang sudah PAID

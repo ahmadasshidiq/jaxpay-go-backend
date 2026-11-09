@@ -37,6 +37,9 @@ func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.Callbac
 		ev.Type, ev.Endpoint = providers.CallbackInquiry, endpointVAInquiry
 	case strings.HasSuffix(r.URL.Path, "/payment"):
 		ev.Type, ev.Endpoint = providers.CallbackPayment, endpointQRISNotify
+		if isVAPayment(body) {
+			ev.Endpoint = endpointVAPayment // ditentukan sebelum verifikasi agar balasan error memakai format service 25
+		}
 	default:
 		return ev, providers.ErrInvalidRequest
 	}
@@ -47,6 +50,10 @@ func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.Callbac
 	}
 	if inquiry {
 		return ev, c.parseInquiry(ev, body)
+	}
+
+	if ev.Endpoint == endpointVAPayment {
+		return ev, c.parseVAPayment(ev, body)
 	}
 
 	var in qrisNotify
@@ -70,6 +77,8 @@ func (c *Client) CallbackResponse(ev *providers.CallbackEvent, err error) (int, 
 	switch ev.Endpoint {
 	case endpointVAInquiry:
 		return inquiryResponse(ev, err)
+	case endpointVAPayment:
+		return vaPaymentResponse(ev, err)
 	case endpointSettlement:
 		return settlementResponse(ev, err)
 	}
