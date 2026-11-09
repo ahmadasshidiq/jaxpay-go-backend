@@ -13,11 +13,11 @@ type EspayConfig struct {
 	PartnerID      string
 	MerchantID     string
 	ChannelID      string
-	PrivateKeyPath string // private key merchant
-	PublicKeyPath  string // public key Espay
-	Password       string // password merchant dari Espay (settlement notification)
-	SignatureKey   string // signature key dari Espay (hash-based signature)
-	MerchantPGURL  string // base URL API merchant (sendinvoice, status VA); default BaseURL
+	PrivateKeyPath string
+	PublicKeyPath  string
+	Password       string
+	SignatureKey   string
+	MerchantPGURL  string
 }
 
 func (c EspayConfig) Enabled() bool { return c.BaseURL != "" && c.PartnerID != "" }
@@ -38,7 +38,6 @@ var (
 	once sync.Once
 )
 
-// Get loads the config once from env (and .env if present).
 func Get() *Config {
 	once.Do(func() {
 		_ = godotenv.Load()

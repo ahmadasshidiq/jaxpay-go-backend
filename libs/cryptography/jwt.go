@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// AdminClaims: token admin dengan daftar hak akses, mis. ["clients:read", "payments:*"] atau ["*"].
 type AdminClaims struct {
 	Access []string `json:"access"`
 	jwt.RegisteredClaims

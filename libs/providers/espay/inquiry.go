@@ -10,7 +10,6 @@ import (
 
 const endpointVAInquiry = "va_inquiry"
 
-// inquiryRequest = body Inquiry (service code 24) dari Espay.
 type inquiryRequest struct {
 	PartnerServiceID string `json:"partnerServiceId"`
 	CustomerNo       string `json:"customerNo"`
@@ -21,7 +20,6 @@ type inquiryRequest struct {
 
 func isInquiryPath(p string) bool { return strings.HasSuffix(p, "/inquiry") }
 
-// parseInquiry: virtualAccountNo = id transaksi yang kita kirim ke Espay (provider_ref).
 func (c *Client) parseInquiry(ev *providers.CallbackEvent, body []byte) error {
 	ev.Type, ev.Endpoint = providers.CallbackInquiry, endpointVAInquiry
 	var in inquiryRequest
@@ -39,7 +37,6 @@ func trunc(s string, n int) string {
 	return s
 }
 
-// inquiryResponse membentuk balasan SNAP service code 24.
 func inquiryResponse(ev *providers.CallbackEvent, err error) (int, any) {
 	var in inquiryRequest
 	_ = json.Unmarshal(ev.Raw, &in)

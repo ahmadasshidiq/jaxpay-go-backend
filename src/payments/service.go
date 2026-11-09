@@ -77,7 +77,6 @@ func (s *PaymentService) findByReference(clientID uuid.UUID, ref string) (*model
 	return &p, e
 }
 
-// create bersifat idempotent per (client, reference_id). Return created=false jika payment sudah ada.
 func (s *PaymentService) create(ctx context.Context, client *models.Client, d CreatePaymentDTO) (*models.Payment, bool, error) {
 	if v, e := s.findByReference(client.ID, d.ReferenceID); e != nil || v != nil {
 		return s.replay(v, d, e)
@@ -104,7 +103,6 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 			return nil, false, errInvalidBank
 		}
 	}
-	// Kode bank direct debit mengikuti master produk, bukan input client.
 	if d.Method == "direct_debit" {
 		var b models.ProviderBank
 		e = s.DB.Where("provider = ? AND product_code = ? AND is_va = ? AND is_active = ?", prov.Name(), d.ProductCode, false, true).First(&b).Error
@@ -134,7 +132,6 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 	if d.ProductCode != "" && d.Method == "direct_debit" {
 		p.ProductCode, p.ReturnURL = &d.ProductCode, &d.ReturnURL
 	}
-	// Espay memanggil callback inquiry dengan id transaksi ini saat pembuatan transaksi, jadi provider_ref harus sudah tersimpan saat insert.
 	p.ProviderRef = providers.NewProviderRef()
 	if d.Metadata != nil {
 		b, e := json.Marshal(d.Metadata)
@@ -144,7 +141,6 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 		p.Metadata = datatypes.JSON(b)
 	}
 
-	// Insert dulu agar unique index (client_id, reference_id) mencegah dobel transaksi saat request paralel.
 	if e = s.DB.Create(p).Error; e != nil {
 		if v, e2 := s.findByReference(client.ID, d.ReferenceID); e2 == nil && v != nil {
 			return s.replay(v, d, nil)
@@ -182,7 +178,6 @@ func (s *PaymentService) vaBankQuery(provider string) *gorm.DB {
 	return s.DB.Model(&models.ProviderBank{}).Where("provider = ? AND is_va = ? AND is_active = ?", provider, true, true)
 }
 
-// vaBanks mengembalikan bank VA aktif dari provider route VA aktif milik client.
 func (s *PaymentService) vaBanks(clientID uuid.UUID) ([]VABankResponse, error) {
 	var route models.ProviderRoute
 	e := s.DB.Where("client_id = ? AND method = ? AND is_active = ?", clientID, "va", true).First(&route).Error

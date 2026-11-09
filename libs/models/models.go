@@ -8,14 +8,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// Client = aplikasi yang memakai JaxPay (jaxlab, jahris, qrupi)
 type Client struct {
 	ID            uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Code          string         `gorm:"uniqueIndex;size:50" json:"code"`
 	Name          string         `gorm:"size:255" json:"name"`
 	APIKey        string         `gorm:"uniqueIndex;size:100" json:"api_key"`
-	APISecretHash string         `gorm:"size:255" json:"-"` // AES-GCM encrypted; HMAC butuh secret asli
-	WebhookSecret string         `gorm:"size:255" json:"-"` // AES-GCM encrypted
+	APISecretHash string         `gorm:"size:255" json:"-"`
+	WebhookSecret string         `gorm:"size:255" json:"-"`
 	CallbackURL   string         `gorm:"size:500" json:"callback_url"`
 	VAPrefix      string         `gorm:"size:20" json:"va_prefix"`
 	IsActive      bool           `gorm:"default:true" json:"is_active"`
@@ -24,7 +23,6 @@ type Client struct {
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-// ProviderRoute = client + method → provider
 type ProviderRoute struct {
 	ID        uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	ClientID  uuid.UUID      `gorm:"type:uuid;uniqueIndex:idx_client_method" json:"client_id"`
@@ -36,7 +34,6 @@ type ProviderRoute struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-// ProviderBank = master produk / bank per provider (mis. daftar produk Espay).
 type ProviderBank struct {
 	ID          uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Provider    string         `gorm:"size:50;uniqueIndex:idx_provider_product" json:"provider"`
@@ -88,7 +85,6 @@ type Payment struct {
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-// CallbackLog = raw payload dari provider (audit)
 type CallbackLog struct {
 	ID        uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Provider  string         `gorm:"size:50;index" json:"provider"`
@@ -106,7 +102,6 @@ const (
 	WebhookFailed  = "FAILED"
 )
 
-// WebhookLog = pengiriman webhook ke app + retry
 type WebhookLog struct {
 	ID           uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	PaymentID    uuid.UUID      `gorm:"type:uuid;index" json:"payment_id"`

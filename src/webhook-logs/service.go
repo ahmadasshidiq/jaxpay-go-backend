@@ -43,7 +43,6 @@ func (s *WebhookLogService) getByID(id uuid.UUID) (*models.WebhookLog, error) {
 	return &v, nil
 }
 
-// retry menjadwalkan ulang pengiriman sekarang; attempt direset agar dapat jatah retry penuh.
 func (s *WebhookLogService) retry(id uuid.UUID) (*models.WebhookLog, error) {
 	v, e := s.getByID(id)
 	if e != nil || v == nil {

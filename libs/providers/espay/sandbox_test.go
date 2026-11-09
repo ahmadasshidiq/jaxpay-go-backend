@@ -12,12 +12,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Hit sandbox Espay sungguhan. Jalankan: ESPAY_SANDBOX=1 go test ./libs/providers/espay -run Sandbox -v
 func TestSandboxCreateQRIS(t *testing.T) {
 	if os.Getenv("ESPAY_SANDBOX") == "" {
 		t.Skip("set ESPAY_SANDBOX=1")
 	}
-	_ = os.Chdir("../../..") // path key di .env relatif ke root project
+	_ = os.Chdir("../../..")
 	_ = godotenv.Load()
 	c, e := New(config.Get().Espay)
 	if e != nil {

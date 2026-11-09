@@ -51,7 +51,6 @@ func TestSettlementCallback(t *testing.T) {
 	}
 }
 
-// Contoh Format Signature Settlement Notification dari dokumentasi Espay.
 func TestSettlementSignatureMatchesEspayDocs(t *testing.T) {
 	got := settlementSignature("cc256d3a2d7687e6f4e1f4217c534bc6b18f66e3552aa9d312f5f4808130504", "2024-01-01 14:39:11", "GOWORLDPG", "SGWYESSISHOP")
 	if want := "591e6edde42e0d63705ccca9d7ff077392aa7f03"; got != want {

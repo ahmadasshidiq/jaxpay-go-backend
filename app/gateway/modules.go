@@ -27,7 +27,6 @@ func RegisterAllModules(router *gin.RouterGroup, db *gorm.DB) {
 	webhooklogs.RegisterWebhookLogModule(router, db)
 }
 
-// RegisterProviders mendaftarkan adapter provider yang dikonfigurasi di env.
 func RegisterProviders(cfg *config.Config) error {
 	if cfg.Espay.Enabled() {
 		p, e := espay.New(cfg.Espay)
@@ -40,7 +39,6 @@ func RegisterProviders(cfg *config.Config) error {
 	return nil
 }
 
-// SeedProviderBanks mengisi master bank dari data provider jika tabel masih kosong untuk provider tsb.
 func SeedProviderBanks(db *gorm.DB) error {
 	rows := make([]models.ProviderBank, 0, len(espay.Products()))
 	for _, p := range espay.Products() {

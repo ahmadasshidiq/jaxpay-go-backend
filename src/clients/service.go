@@ -68,7 +68,7 @@ func (s *ClientService) create(d CreateDTO) (*CredentialsDTO, error) {
 		return nil, e
 	}
 	if d.IsActive != nil && !*d.IsActive {
-		s.DB.Model(&v).Update("is_active", false) // GORM melewati zero value saat Create (default:true)
+		s.DB.Model(&v).Update("is_active", false)
 	}
 	return &CredentialsDTO{ID: v.ID, APIKey: key, APISecret: secret, WebhookSecret: whsec}, nil
 }

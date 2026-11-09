@@ -30,8 +30,6 @@ const (
 
 const dtLayout = "2006-01-02 15:04:05"
 
-// CreateVA membuat Virtual Account dinamis (non-fixed) via Direct API sendinvoice.
-// order_id dipakai sebagai provider_ref sehingga callback inquiry/payment bisa menemukan payment-nya.
 func (c *Client) CreateVA(ctx context.Context, req providers.CreateVARequest) (*providers.PaymentResult, error) {
 	if c.cfg.SignatureKey == "" {
 		return nil, errors.New("espay sendinvoice: signature key not configured")
@@ -85,8 +83,6 @@ func (c *Client) CreateVA(ctx context.Context, req providers.CreateVARequest) (*
 	return res, nil
 }
 
-// checkVAStatus = Inquiry Status (service code 26). isPaymentNotif sengaja tidak dikirim:
-// nilainya memicu kirim ulang notifikasi (Y) atau mengubah trx_status di portal Espay (N).
 func (c *Client) checkVAStatus(ctx context.Context, providerRef string) (*providers.StatusResult, error) {
 	in := map[string]any{
 		"partnerServiceId": " ESPAY",
@@ -119,7 +115,6 @@ func (c *Client) checkVAStatus(ctx context.Context, providerRef string) (*provid
 	return r, nil
 }
 
-// mapVAFlagStatus memetakan paymentFlagStatus ke status internal.
 func mapVAFlagStatus(s string) models.PaymentStatus {
 	switch s {
 	case "S":
@@ -129,10 +124,9 @@ func mapVAFlagStatus(s string) models.PaymentStatus {
 	case "EX":
 		return models.StatusExpired
 	}
-	return models.StatusPending // SP suspect, IP in process, WC waiting correction, WS waiting settlement
+	return models.StatusPending
 }
 
-// deleteVA = Delete VA (service code 31). VA dinamis hanya bisa dihapus selama status transaksi In Process.
 func (c *Client) deleteVA(ctx context.Context, providerRef string) error {
 	in := map[string]any{
 		"partnerServiceId": " ESPAY",
@@ -149,7 +143,6 @@ func (c *Client) deleteVA(ctx context.Context, providerRef string) error {
 	return nil
 }
 
-// merchantURL = base URL API merchant (sendinvoice, status VA); default BaseURL.
 func (c *Client) merchantURL() string {
 	if c.cfg.MerchantPGURL != "" {
 		return c.cfg.MerchantPGURL
@@ -157,15 +150,12 @@ func (c *Client) merchantURL() string {
 	return c.cfg.BaseURL
 }
 
-// hashSignature = Hash-Based Signature Espay:
-// lowercase(hex(SHA256(UPPERCASE("##" + signatureKey + "##" + field1 + "##" + ... + "##" + mode + "##"))))
 func hashSignature(key, mode string, fields ...string) string {
 	s := "##" + key + "##" + strings.Join(fields, "##") + "##" + mode + "##"
 	h := sha256.Sum256([]byte(strings.ToUpper(s)))
 	return hex.EncodeToString(h[:])
 }
 
-// postForm mengirim request Direct API (non-SNAP) application/x-www-form-urlencoded.
 func (c *Client) postForm(ctx context.Context, path string, f url.Values, out any) error {
 	body := f.Encode()
 	req, e := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(c.merchantURL(), "/")+path, strings.NewReader(body))
@@ -205,7 +195,6 @@ func newUUID() string {
 	return h[:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:]
 }
 
-// alnumSpace menyisakan huruf, angka, dan spasi (format remark2).
 func alnumSpace(s string) string {
 	return strings.Map(func(r rune) rune {
 		if r == ' ' || r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' {

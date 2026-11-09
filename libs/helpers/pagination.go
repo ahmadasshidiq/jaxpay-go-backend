@@ -18,10 +18,6 @@ type PaginatedResult struct {
 
 var columnRe = regexp.MustCompile(`^[a-z_]+(\.[a-z_]+)?$`)
 
-// BuildPaginatedQuery menerapkan filter, sort dan pagination.
-// Key filter berformat "<column>.<op>", mis. "payments.status.eq", "payments.deleted_at.isnull".
-// Op: eq, ne, gt, gte, lt, lte, like, ilike, in, isnull, notnull. Value nil diabaikan (kecuali isnull/notnull).
-// Sort: "created_at" atau "-created_at" (desc).
 func BuildPaginatedQuery(q *gorm.DB, page, limit int, sort, defaultSort string, filters map[string]any, out any) (*PaginatedResult, error) {
 	if page < 1 {
 		page = 1

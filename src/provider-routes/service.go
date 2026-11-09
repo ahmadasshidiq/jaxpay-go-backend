@@ -90,7 +90,6 @@ func (s *ProviderRouteService) update(id uuid.UUID, d UpdateDTO) (*models.Provid
 	return s.getByID(id)
 }
 
-// archive: hard delete juga karena unique index (client_id, method) tidak mengecualikan soft delete.
 func (s *ProviderRouteService) archive(id uuid.UUID) (bool, error) {
 	return s.delete(id)
 }

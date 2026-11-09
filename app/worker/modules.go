@@ -52,13 +52,10 @@ const (
 	reconcileAfter     = 10 * time.Minute
 )
 
-// backoff setelah attempt ke-n gagal: 1m, 5m, 15m, 1h, 6h, 6h, ...
 var backoff = []time.Duration{time.Minute, 5 * time.Minute, 15 * time.Minute, time.Hour, 6 * time.Hour}
 
 var webhookHTTP = &http.Client{Timeout: 10 * time.Second}
 
-// dispatchWebhooks mengklaim WebhookLog PENDING yang jatuh tempo (SKIP LOCKED + lease,
-// aman untuk banyak worker) lalu mengirimnya ke callback_url client.
 func dispatchWebhooks(ctx context.Context, db *gorm.DB) error {
 	var batch []models.WebhookLog
 	e := db.Transaction(func(tx *gorm.DB) error {
@@ -140,8 +137,6 @@ func send(ctx context.Context, db *gorm.DB, w *models.WebhookLog) (int, string, 
 	return res.StatusCode, string(b), nil
 }
 
-// expirePayments: PENDING yang lewat ExpiredAt → EXPIRED (+ webhook payment.expired).
-// Status dicek dulu ke provider supaya pembayaran yang callback-nya hilang tidak ikut kedaluwarsa.
 func expirePayments(ctx context.Context, db *gorm.DB) error {
 	var rows []models.Payment
 	if e := db.Where("status = ? AND expired_at < ?", models.StatusPending, time.Now()).
@@ -163,7 +158,6 @@ func expirePayments(ctx context.Context, db *gorm.DB) error {
 	return nil
 }
 
-// reconcilePayments: jaring pengaman jika callback provider hilang.
 func reconcilePayments(ctx context.Context, db *gorm.DB) error {
 	var rows []models.Payment
 	now := time.Now()
@@ -178,13 +172,12 @@ func reconcilePayments(ctx context.Context, db *gorm.DB) error {
 		}
 		p := &rows[i]
 		if !syncFromProvider(ctx, db, p) {
-			db.Model(p).UpdateColumn("updated_at", time.Now()) // throttle pengecekan berikutnya
+			db.Model(p).UpdateColumn("updated_at", time.Now())
 		}
 	}
 	return nil
 }
 
-// syncFromProvider return true jika status payment berubah berdasarkan provider.
 func syncFromProvider(ctx context.Context, db *gorm.DB, p *models.Payment) bool {
 	prov, e := providers.Get(p.Provider)
 	if e != nil || p.ProviderRef == "" {

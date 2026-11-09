@@ -19,7 +19,6 @@ func RespondSuccess(x *gin.Context, module string, code int, data any) {
 	x.JSON(code, Response{Success: true, Module: module, Data: data})
 }
 
-// RespondError menyembunyikan detail error 5xx dari client.
 func RespondError(x *gin.Context, module string, code int, e error) {
 	msg := http.StatusText(code)
 	if e != nil {
@@ -32,7 +31,6 @@ func RespondError(x *gin.Context, module string, code int, e error) {
 	x.AbortWithStatusJSON(code, Response{Success: false, Module: module, Error: msg})
 }
 
-// HandleRemove: archive (soft delete) default, hard delete jika ?permanent=true.
 func HandleRemove(x *gin.Context, module string, archive, remove func(id uuid.UUID) (bool, error)) {
 	id, e := uuid.Parse(x.Param("id"))
 	if e != nil {

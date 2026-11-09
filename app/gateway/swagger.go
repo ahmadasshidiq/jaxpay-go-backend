@@ -11,12 +11,10 @@ import (
 //go:embed swagger.html
 var swaggerPage []byte
 
-// swaggerSigned = Swagger UI dengan requestInterceptor yang menandatangani request client (HMAC).
 func swaggerSigned(x *gin.Context) {
 	x.Data(http.StatusOK, "text/html; charset=utf-8", swaggerPage)
 }
 
-// swaggerSpec menyajikan spesifikasi OpenAPI hasil swag init (docs/docs.go).
 func swaggerSpec(x *gin.Context) {
 	doc, e := swag.ReadDoc()
 	if e != nil {

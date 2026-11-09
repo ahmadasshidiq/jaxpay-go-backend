@@ -11,7 +11,6 @@ import (
 	"jaxpay-go-backend/libs/cryptography"
 )
 
-// Membuat JWT admin untuk dev/Swagger. Contoh: go run ./app/admin-token -user admin -access "*" -ttl 24h
 func main() {
 	user := flag.String("user", "admin", "user id (subject)")
 	access := flag.String("access", "*", `hak akses dipisah koma, mis. "clients:*,payments:read"`)

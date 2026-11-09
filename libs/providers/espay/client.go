@@ -32,12 +32,11 @@ var wib = time.FixedZone("WIB", 7*3600)
 
 const tsLayout = "2006-01-02T15:04:05-07:00"
 
-// Client adalah adapter Espay SNAP (QRIS MPM) dengan asymmetric signature SHA256withRSA.
 type Client struct {
 	cfg         config.EspayConfig
 	http        *http.Client
-	privKey     *rsa.PrivateKey // private key merchant: menandatangani request ke Espay
-	espayPubKey *rsa.PublicKey  // public key Espay: memvalidasi callback dari Espay
+	privKey     *rsa.PrivateKey
+	espayPubKey *rsa.PublicKey
 }
 
 func New(cfg config.EspayConfig) (*Client, error) {
@@ -54,7 +53,6 @@ func New(cfg config.EspayConfig) (*Client, error) {
 
 func (c *Client) Name() string { return name }
 
-// stringToSign = HTTPMethod:RelativeUrl:Lowercase(HexSHA256(MinifyJson(body))):Timestamp
 func stringToSign(method, path string, body []byte, ts string) string {
 	var min bytes.Buffer
 	if len(body) > 0 && json.Compact(&min, body) != nil {
@@ -65,7 +63,6 @@ func stringToSign(method, path string, body []byte, ts string) string {
 	return method + ":" + path + ":" + hex.EncodeToString(h[:]) + ":" + ts
 }
 
-// sign = base64(SHA256withRSA(privateKey, stringToSign))
 func (c *Client) sign(method, path string, body []byte, ts string) (string, error) {
 	sts := stringToSign(method, path, body, ts)
 	digest := sha256.Sum256([]byte(sts))
@@ -86,7 +83,6 @@ func (c *Client) sign(method, path string, body []byte, ts string) (string, erro
 	return out, nil
 }
 
-// verify memvalidasi X-SIGNATURE dari Espay dengan public key Espay.
 func (c *Client) verify(method, path string, body []byte, ts, signature string) bool {
 	sig, e := base64.StdEncoding.DecodeString(signature)
 	if e != nil {
@@ -96,14 +92,11 @@ func (c *Client) verify(method, path string, body []byte, ts, signature string) 
 	return rsa.VerifyPKCS1v15(c.espayPubKey, crypto.SHA256, digest[:], sig) == nil
 }
 
-// do mengirim request SNAP ke Espay. path = relative URL, mis. /api/v1.0/qr/qr-mpm-generate.
 func (c *Client) do(ctx context.Context, method, path string, in, out any) error {
 	return c.doAt(ctx, c.cfg.BaseURL, method, path, in, out)
 }
 
-// doAt = do dengan base URL tertentu (signature tetap memakai relative path).
 func (c *Client) doAt(ctx context.Context, base, method, path string, in, out any) error {
-	// body dikirim apa adanya (tidak di-minify); minify hanya dilakukan di stringToSign
 	body, e := json.MarshalIndent(in, "", "  ")
 	if e != nil {
 		return e
@@ -152,7 +145,6 @@ type snapResponse struct {
 	ResponseMessage string `json:"responseMessage"`
 }
 
-// ok: semua kode HTTP 2xx dianggap sukses, mis. 2024700 pada qr-mpm-generate.
 func (r snapResponse) ok() bool { return strings.HasPrefix(r.ResponseCode, "2") }
 
 func (r snapResponse) err(op string) error {
@@ -173,7 +165,6 @@ type amount struct {
 
 func formatAmount(v int64) amount { return amount{Value: fmt.Sprintf("%d.00", v), Currency: "IDR"} }
 
-// parseAmount mengubah "150000.00" → 150000 tanpa float; desimal non-nol ditolak.
 func parseAmount(s string) (int64, error) {
 	whole, frac, _ := strings.Cut(strings.TrimSpace(s), ".")
 	if strings.Trim(frac, "0") != "" {
@@ -182,7 +173,6 @@ func parseAmount(s string) (int64, error) {
 	return strconv.ParseInt(whole, 10, 64)
 }
 
-// parseTS menerima +07:00 maupun +0700 (callback Espay memakai keduanya).
 func parseTS(s string) (time.Time, error) {
 	if t, e := time.Parse(tsLayout, s); e == nil {
 		return t, nil

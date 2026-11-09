@@ -17,7 +17,6 @@ func VerifyHMACSHA256(secret, msg, sigHex string) bool {
 	return hmac.Equal([]byte(HMACSHA256Hex(secret, msg)), []byte(sigHex))
 }
 
-// RandomToken menghasilkan hex string acak sepanjang 2*n karakter.
 func RandomToken(n int) string {
 	b := make([]byte, n)
 	if _, e := rand.Read(b); e != nil {

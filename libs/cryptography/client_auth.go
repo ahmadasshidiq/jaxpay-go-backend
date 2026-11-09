@@ -15,11 +15,6 @@ import (
 
 const maxSkew = 5 * time.Minute
 
-// ClientAuthMiddleware memverifikasi request dari app client:
-//
-//	X-API-Key:   api key client
-//	X-Timestamp: unix seconds (selisih maks 5 menit)
-//	X-Signature: hex(HMAC-SHA256(api_secret, timestamp + "." + METHOD + "." + request_uri + "." + body))
 func ClientAuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(x *gin.Context) {
 		key, ts, sig := x.GetHeader("X-API-Key"), x.GetHeader("X-Timestamp"), x.GetHeader("X-Signature")

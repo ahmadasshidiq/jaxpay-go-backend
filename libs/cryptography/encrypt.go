@@ -24,7 +24,6 @@ func aead() (cipher.AEAD, error) {
 	return cipher.NewGCM(block)
 }
 
-// Encrypt mengenkripsi secret (AES-256-GCM) untuk disimpan di DB.
 func Encrypt(plain string) (string, error) {
 	g, e := aead()
 	if e != nil {

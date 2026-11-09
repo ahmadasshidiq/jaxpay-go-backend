@@ -9,7 +9,6 @@ import (
 
 const pathDirectDebit = "/apimerchant/v1.0/debit/payment-host-to-host"
 
-// CreateDirectDebit = Payment Host to Host (service code 54): menghasilkan URL Espay Checkout Page.
 func (c *Client) CreateDirectDebit(ctx context.Context, req providers.CreateDirectDebitRequest) (*providers.PaymentResult, error) {
 	total := formatAmount(req.Amount)
 	in := map[string]any{

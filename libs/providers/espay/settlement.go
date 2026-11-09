@@ -16,7 +16,6 @@ import (
 
 const endpointSettlement = "settlement"
 
-// settlementData = field "data" (JSON string di dalam form-urlencoded).
 type settlementData struct {
 	TxID             string `json:"tx_id"`
 	PaymentID        string `json:"payment_id"`
@@ -27,18 +26,14 @@ type settlementData struct {
 
 func isSettlementPath(p string) bool { return strings.HasSuffix(p, "/settlement") }
 
-// defaultSettlementSender = sender_id Espay pada contoh dokumentasi, dipakai jika form tidak mengirim sender_id.
 const defaultSettlementSender = "GOWORLDPG"
 
-// settlementSignature = hex(SHA1(hex(MD5(rq_uuid + rq_datetime + sender_id + receiver_id)))), tanpa ## dan uppercase.
 func settlementSignature(rqUUID, rqDatetime, senderID, receiverID string) string {
 	m := md5.Sum([]byte(rqUUID + rqDatetime + senderID + receiverID))
 	s := sha1.Sum([]byte(hex.EncodeToString(m[:])))
 	return hex.EncodeToString(s[:])
 }
 
-// parseSettlement: body application/x-www-form-urlencoded, divalidasi dengan password merchant
-// dan Hash-Based Signature Settlement Notification.
 func (c *Client) parseSettlement(ev *providers.CallbackEvent, body []byte) error {
 	ev.Type, ev.Endpoint = providers.CallbackSettlement, endpointSettlement
 	f, e := url.ParseQuery(string(body))

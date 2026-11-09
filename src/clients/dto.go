@@ -25,7 +25,6 @@ type UpdateDTO struct {
 	IsActive    *bool   `json:"is_active"`
 }
 
-// CredentialsDTO hanya dikembalikan sekali saat create / rotate-secret.
 type CredentialsDTO struct {
 	ID            uuid.UUID `json:"id"`
 	APIKey        string    `json:"api_key"`

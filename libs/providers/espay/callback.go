@@ -24,12 +24,10 @@ type qrisNotify struct {
 	PaidTime                   string  `json:"paidTime"`
 }
 
-// ParseCallback memvalidasi X-SIGNATURE (SHA256withRSA, public key Espay) lalu menormalisasi payload.
-// RelativeUrl untuk StringToSign = path request yang diterima JaxPay.
 func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.CallbackEvent, error) {
 	ev := &providers.CallbackEvent{Provider: name, Raw: body}
 	if isSettlementPath(r.URL.Path) {
-		return ev, c.parseSettlement(ev, body) // form-urlencoded + password, bukan SNAP
+		return ev, c.parseSettlement(ev, body)
 	}
 	inquiry := isInquiryPath(r.URL.Path)
 	switch {
@@ -38,7 +36,7 @@ func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.Callbac
 	case strings.HasSuffix(r.URL.Path, "/payment"):
 		ev.Type, ev.Endpoint = providers.CallbackPayment, endpointQRISNotify
 		if isVAPayment(body) {
-			ev.Endpoint = endpointVAPayment // ditentukan sebelum verifikasi agar balasan error memakai format service 25
+			ev.Endpoint = endpointVAPayment
 		}
 	default:
 		return ev, providers.ErrInvalidRequest
@@ -72,7 +70,6 @@ func (c *Client) ParseCallback(r *http.Request, body []byte) (*providers.Callbac
 	return ev, nil
 }
 
-// CallbackResponse membentuk balasan SNAP (service code 52 = QR MPM notify).
 func (c *Client) CallbackResponse(ev *providers.CallbackEvent, err error) (int, any) {
 	switch ev.Endpoint {
 	case endpointVAInquiry:

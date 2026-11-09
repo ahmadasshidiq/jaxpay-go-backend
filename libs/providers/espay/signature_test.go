@@ -14,7 +14,6 @@ import (
 	"jaxpay-go-backend/libs/providers"
 )
 
-// Contoh dari dokumentasi Espay.
 func TestStringToSignMatchesEspayDocs(t *testing.T) {
 	body := []byte(`{
 "partnerReferenceNo": "DIGSNAP000033",
@@ -34,7 +33,6 @@ func TestStringToSignMatchesEspayDocs(t *testing.T) {
 	}
 }
 
-// Contoh validasi signature callback (VA inquiry) dari dokumentasi Espay.
 func TestCallbackStringToSignMatchesEspayDocs(t *testing.T) {
 	body := []byte(`{
   "partnerServiceId": " Espay",

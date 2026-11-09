@@ -21,7 +21,6 @@ func NewRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 		}
 		x.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	// Dokumentasi API hanya tersedia di luar production.
 	if cfg.AppEnv != "production" {
 		r.GET("/docs", swaggerSigned)
 		r.GET("/swagger/doc.json", swaggerSpec)

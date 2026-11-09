@@ -13,7 +13,6 @@ import (
 
 const endpointVAPayment = "va_payment"
 
-// vaPaymentRequest = body Payment (service code 25) dari Espay.
 type vaPaymentRequest struct {
 	PartnerServiceID string  `json:"partnerServiceId"`
 	CustomerNo       string  `json:"customerNo"`
@@ -33,7 +32,6 @@ func isVAPayment(body []byte) bool {
 	return json.Unmarshal(body, &in) == nil && in.VirtualAccountNo != ""
 }
 
-// parseVAPayment memakai totalAmount (sama dengan Inquiry), karena paidAmount bisa termasuk fee pada buyer fee.
 func (c *Client) parseVAPayment(ev *providers.CallbackEvent, body []byte) error {
 	var in vaPaymentRequest
 	if json.Unmarshal(body, &in) != nil || in.PaymentRequestID == "" || in.TotalAmount == nil {
@@ -66,7 +64,6 @@ func mapVAPaymentStatus(s string) (models.PaymentStatus, bool) {
 	return "", false
 }
 
-// vaPaymentResponse membentuk balasan SNAP service code 25.
 func vaPaymentResponse(ev *providers.CallbackEvent, err error) (int, any) {
 	var in vaPaymentRequest
 	_ = json.Unmarshal(ev.Raw, &in)
@@ -107,7 +104,6 @@ func vaPaymentResponse(ev *providers.CallbackEvent, err error) (int, any) {
 			"billDescription": map[string]string{"english": desc, "indonesia": desc},
 		}}
 	}
-	// reconcileId deterministik agar notifikasi ulang mendapat ID yang sama.
 	h := sha256.Sum256([]byte(in.PaymentRequestID))
 	return code, map[string]any{
 		"responseCode":       rc,

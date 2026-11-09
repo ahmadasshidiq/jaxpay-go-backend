@@ -13,8 +13,6 @@ type window struct {
 	count int
 }
 
-// RateLimiter: fixed window per menit, per API key client (fallback IP).
-// In-memory; untuk multi-instance pindahkan ke Redis.
 func RateLimiter(perMinute int) gin.HandlerFunc {
 	var mu sync.Mutex
 	buckets := map[string]*window{}

@@ -19,7 +19,6 @@ func (c *Client) CreateQRIS(ctx context.Context, req providers.CreateQRISRequest
 	if ref == "" {
 		ref = providers.NewProviderRef()
 	}
-	// struct (bukan map) agar urutan field sama dengan dokumentasi Espay
 	in := struct {
 		PartnerReferenceNo string            `json:"partnerReferenceNo"`
 		MerchantID         string            `json:"merchantId"`
@@ -81,7 +80,7 @@ func (c *Client) Cancel(ctx context.Context, method, providerRef string) error {
 	case "va":
 		return c.deleteVA(ctx, providerRef)
 	case "direct_debit":
-		return providers.ErrNotSupported // Espay tidak menyediakan pembatalan untuk layanan ini
+		return providers.ErrNotSupported
 	}
 	in := map[string]any{
 		"originalPartnerReferenceNo": providerRef,
@@ -98,7 +97,6 @@ func (c *Client) Cancel(ctx context.Context, method, providerRef string) error {
 	return nil
 }
 
-// mapStatus memetakan latestTransactionStatus SNAP ke status internal.
 func mapStatus(s string) models.PaymentStatus {
 	switch s {
 	case "00":
@@ -108,5 +106,5 @@ func mapStatus(s string) models.PaymentStatus {
 	case "06", "07":
 		return models.StatusFailed
 	}
-	return models.StatusPending // 01 initiated, 02 paying, 03 pending, dst.
+	return models.StatusPending
 }

@@ -1,12 +1,10 @@
 package espay
 
-// Product = master produk pembayaran Espay (nama, kode produk, kode bank) dari tim Espay.
-// Hanya dipakai sebagai seed awal tabel provider_banks; data aktif dibaca dari DB.
 type Product struct {
 	Name     string
 	Code     string
 	BankCode string
-	IsVA     bool // dapat dipakai di sendinvoice (Virtual Account)
+	IsVA     bool
 }
 
 var products = []Product{
@@ -86,5 +84,4 @@ var products = []Product{
 	{"WECHAT QR PAY", "WECHATQRPAY", "008", false},
 }
 
-// Products mengembalikan seluruh master produk Espay.
 func Products() []Product { return products }

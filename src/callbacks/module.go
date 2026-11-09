@@ -5,7 +5,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Route callback provider: publik tanpa JWT, verifikasi signature dilakukan di adapter provider.
 func RegisterCallbackModule(router *gin.RouterGroup, db *gorm.DB) {
 	c := NewController(NewService(db))
 	g := router.Group("/callbacks/:provider")

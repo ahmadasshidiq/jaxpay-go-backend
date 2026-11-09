@@ -48,7 +48,6 @@ func TestCreateVASendInvoice(t *testing.T) {
 	}
 }
 
-// Contoh Format Signature Universal (Send Invoice) dari dokumentasi Espay.
 func TestHashSignatureMatchesEspayDocs(t *testing.T) {
 	got := hashSignature("cc256d3a2d7687e6f4e1f4217c534bc6b18f66e3552aa9d312f5f4808130504", "SENDINVOICE",
 		"rfbd39734-ed32-490d-98c4-e91bcd91037a", "2024-01-01 14:39:11", "ORDER001", "100000", "IDR", "SGWDIGALLERY")

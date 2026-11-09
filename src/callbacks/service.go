@@ -25,7 +25,6 @@ func NewService(db *gorm.DB) *CallbackService {
 	return &CallbackService{DB: db}
 }
 
-// handle: simpan CallbackLog → verifikasi + parse → proses idempotent → balasan format provider.
 func (s *CallbackService) handle(provider string, r *http.Request, body []byte) (int, any, error) {
 	p, e := providers.Get(provider)
 	if e != nil {
@@ -53,7 +52,7 @@ func (s *CallbackService) handle(provider string, r *http.Request, body []byte) 
 
 func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.CallbackLog) error {
 	if ev.Type == providers.CallbackSettlement {
-		return nil // cukup tercatat di CallbackLog; tidak mengubah status payment
+		return nil
 	}
 	p, e := s.findPayment(ev)
 	if e != nil {
@@ -79,10 +78,10 @@ func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.Callb
 		ev.Bill = bill
 		return nil
 	}
-	ev.Bill = bill // data balasan payment VA
+	ev.Bill = bill
 
 	if p.Status == models.StatusPaid {
-		return nil // idempotent: callback ulang untuk payment yang sudah PAID
+		return nil
 	}
 	if ev.Status == models.StatusPending {
 		return nil
@@ -100,7 +99,6 @@ func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.Callb
 	}
 	e = helpers.TransitionPayment(s.DB, p, ev.Status, paidAt)
 	if errors.Is(e, helpers.ErrStateConflict) {
-		// Diproses paralel oleh callback lain / worker.
 		if s.DB.First(p, "id = ?", p.ID).Error == nil && p.Status == ev.Status {
 			return nil
 		}
@@ -109,7 +107,6 @@ func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.Callb
 	return e
 }
 
-// findPayment mencari payment via ProviderRef/VANumber, mendahulukan yang PENDING (nomor VA bisa dipakai ulang).
 func (s *CallbackService) findPayment(ev *providers.CallbackEvent) (*models.Payment, error) {
 	q := s.DB.Where("provider = ?", ev.Provider)
 	switch {
@@ -136,7 +133,7 @@ func headersJSON(r *http.Request) datatypes.JSON {
 	h := map[string]string{}
 	for k, v := range r.Header {
 		if k == "Authorization" || len(v) == 0 {
-			continue // jangan simpan token
+			continue
 		}
 		h[k] = v[0]
 	}
@@ -149,7 +146,6 @@ func payloadJSON(body []byte) datatypes.JSON {
 	if json.Valid(body) {
 		return datatypes.JSON(body)
 	}
-	// form-urlencoded (mis. settlement Espay): simpan sebagai objek, password disamarkan
 	if f, e := url.ParseQuery(string(body)); e == nil && len(f) > 0 {
 		m := map[string]string{}
 		for k := range f {

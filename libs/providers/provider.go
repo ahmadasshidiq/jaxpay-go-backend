@@ -21,11 +21,10 @@ type Provider interface {
 	CreateDirectDebit(ctx context.Context, req CreateDirectDebitRequest) (*PaymentResult, error)
 	CheckStatus(ctx context.Context, method, providerRef string) (*StatusResult, error)
 	Cancel(ctx context.Context, method, providerRef string) error
-	ParseCallback(r *http.Request, body []byte) (*CallbackEvent, error) // verifikasi signature + normalisasi
-	CallbackResponse(ev *CallbackEvent, err error) (int, any)           // format balasan sesuai spec provider
+	ParseCallback(r *http.Request, body []byte) (*CallbackEvent, error)
+	CallbackResponse(ev *CallbackEvent, err error) (int, any)
 }
 
-// NewProviderRef membuat id transaksi ke provider: "JXP" + 20 hex uppercase (alfanumerik, 23 karakter).
 func NewProviderRef() string {
 	b := make([]byte, 10)
 	_, _ = rand.Read(b)
@@ -43,20 +42,20 @@ var (
 )
 
 type CreateVARequest struct {
-	ProviderRef   string // order_id ke provider; sudah tersimpan di DB sebelum request agar callback inquiry menemukannya
+	ProviderRef   string
 	ReferenceID   string
 	Amount        int64
 	CustomerName  string
 	CustomerEmail string
 	CustomerPhone string
 	Description   string
-	BankCode      string // kode bank provider, mis. 014 (BCA)
+	BankCode      string
 	VAPrefix      string
 	ExpiredAt     time.Time
 }
 
 type CreateDirectDebitRequest struct {
-	ProviderRef   string // sudah tersimpan di DB sebelum request agar callback inquiry menemukannya
+	ProviderRef   string
 	Amount        int64
 	CustomerName  string
 	CustomerEmail string
@@ -68,7 +67,7 @@ type CreateDirectDebitRequest struct {
 }
 
 type CreateQRISRequest struct {
-	ProviderRef string // sudah tersimpan di DB sebelum request agar callback inquiry menemukannya
+	ProviderRef string
 	ReferenceID string
 	Amount      int64
 	Description string
@@ -91,22 +90,22 @@ type StatusResult struct {
 }
 
 const (
-	CallbackInquiry    = "inquiry"    // provider menanyakan tagihan (VA)
-	CallbackPayment    = "payment"    // notifikasi pembayaran / perubahan status
-	CallbackSettlement = "settlement" // informasi pelunasan dana ke merchant (tidak mengubah status payment)
+	CallbackInquiry    = "inquiry"
+	CallbackPayment    = "payment"
+	CallbackSettlement = "settlement"
 )
 
 type CallbackEvent struct {
 	Provider    string
-	Type        string // CallbackInquiry | CallbackPayment
-	Endpoint    string // id endpoint spesifik provider, untuk format balasan
+	Type        string
+	Endpoint    string
 	ProviderRef string
 	VANumber    string
 	Amount      int64
 	Status      models.PaymentStatus
 	PaidAt      *time.Time
 	Raw         []byte
-	Bill        *Bill // diisi service saat inquiry
+	Bill        *Bill
 }
 
 type Bill struct {

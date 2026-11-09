@@ -18,8 +18,6 @@ func NewService(db *gorm.DB) *ProviderBankService {
 	return &ProviderBankService{DB: db}
 }
 
-// Seed mengisi master bank provider hanya jika belum ada data untuk provider tsb,
-// agar perubahan dari admin tidak tertimpa saat restart.
 func Seed(db *gorm.DB, provider string, rows []models.ProviderBank) error {
 	var n int64
 	if e := db.Unscoped().Model(&models.ProviderBank{}).Where("provider = ?", provider).Count(&n).Error; e != nil || n > 0 {
@@ -97,8 +95,6 @@ func (s *ProviderBankService) update(id uuid.UUID, d UpdateDTO) (*models.Provide
 	return s.getByID(id)
 }
 
-// archive: hard delete karena unique index (provider, product_code) tidak mengecualikan soft delete.
-// Untuk menyembunyikan bank sementara, gunakan is_active=false.
 func (s *ProviderBankService) archive(id uuid.UUID) (bool, error) {
 	return s.delete(id)
 }

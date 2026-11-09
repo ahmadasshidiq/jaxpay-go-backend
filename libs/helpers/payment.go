@@ -27,8 +27,6 @@ func EventFor(s models.PaymentStatus) string {
 	return "payment.updated"
 }
 
-// TransitionPayment memindahkan payment PENDING → status final dan insert WebhookLog
-// (outbox) dalam satu transaksi. Return ErrStateConflict jika payment sudah tidak PENDING.
 func TransitionPayment(db *gorm.DB, p *models.Payment, to models.PaymentStatus, paidAt *time.Time) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		updates := map[string]any{"status": to, "updated_at": time.Now()}
