@@ -18,10 +18,15 @@ import (
 	"strings"
 	"time"
 
+	"jaxpay-go-backend/libs/models"
 	"jaxpay-go-backend/libs/providers"
 )
 
-const pathSendInvoice = "/rest/merchantpg/sendinvoice"
+const (
+	pathSendInvoice = "/rest/merchantpg/sendinvoice"
+	pathVAStatus    = "/apimerchant/v1.0/transfer-va/status"
+	pathVADelete    = "/apimerchant/v1.0/transfer-va/delete-va"
+)
 
 const dtLayout = "2006-01-02 15:04:05"
 
@@ -80,6 +85,78 @@ func (c *Client) CreateVA(ctx context.Context, req providers.CreateVARequest) (*
 	return res, nil
 }
 
+// checkVAStatus = Inquiry Status (service code 26). isPaymentNotif sengaja tidak dikirim:
+// nilainya memicu kirim ulang notifikasi (Y) atau mengubah trx_status di portal Espay (N).
+func (c *Client) checkVAStatus(ctx context.Context, providerRef string) (*providers.StatusResult, error) {
+	in := map[string]any{
+		"partnerServiceId": " ESPAY",
+		"customerNo":       c.cfg.MerchantID,
+		"virtualAccountNo": providerRef,
+	}
+	var out struct {
+		snapResponse
+		VirtualAccountData struct {
+			PaymentFlagStatus string `json:"paymentFlagStatus"`
+			PaidAmount        amount `json:"paidAmount"`
+			TrxDateTime       string `json:"trxDateTime"`
+		} `json:"virtualAccountData"`
+	}
+	if e := c.doAt(ctx, c.merchantURL(), http.MethodPost, pathVAStatus, in, &out); e != nil {
+		return nil, e
+	}
+	if !out.ok() {
+		return nil, out.err("transfer-va/status")
+	}
+	d := out.VirtualAccountData
+	r := &providers.StatusResult{ProviderRef: providerRef, Status: mapVAFlagStatus(d.PaymentFlagStatus)}
+	if r.Status == models.StatusPaid {
+		amt, e := parseAmount(d.PaidAmount.Value)
+		if e != nil {
+			return nil, fmt.Errorf("espay transfer-va/status: %w", e)
+		}
+		r.Amount, r.PaidAt = amt, parseTime(d.TrxDateTime)
+	}
+	return r, nil
+}
+
+// mapVAFlagStatus memetakan paymentFlagStatus ke status internal.
+func mapVAFlagStatus(s string) models.PaymentStatus {
+	switch s {
+	case "S":
+		return models.StatusPaid
+	case "F":
+		return models.StatusFailed
+	case "EX":
+		return models.StatusExpired
+	}
+	return models.StatusPending // SP suspect, IP in process, WC waiting correction, WS waiting settlement
+}
+
+// deleteVA = Delete VA (service code 31). VA dinamis hanya bisa dihapus selama status transaksi In Process.
+func (c *Client) deleteVA(ctx context.Context, providerRef string) error {
+	in := map[string]any{
+		"partnerServiceId": " ESPAY",
+		"customerNo":       c.cfg.MerchantID,
+		"virtualAccountNo": providerRef,
+	}
+	var out snapResponse
+	if e := c.doAt(ctx, c.merchantURL(), http.MethodDelete, pathVADelete, in, &out); e != nil {
+		return e
+	}
+	if !out.ok() {
+		return out.err("transfer-va/delete-va")
+	}
+	return nil
+}
+
+// merchantURL = base URL API merchant (sendinvoice, status VA); default BaseURL.
+func (c *Client) merchantURL() string {
+	if c.cfg.MerchantPGURL != "" {
+		return c.cfg.MerchantPGURL
+	}
+	return c.cfg.BaseURL
+}
+
 // hashSignature = Hash-Based Signature Espay:
 // lowercase(hex(SHA256(UPPERCASE("##" + signatureKey + "##" + field1 + "##" + ... + "##" + mode + "##"))))
 func hashSignature(key, mode string, fields ...string) string {
@@ -90,12 +167,8 @@ func hashSignature(key, mode string, fields ...string) string {
 
 // postForm mengirim request Direct API (non-SNAP) application/x-www-form-urlencoded.
 func (c *Client) postForm(ctx context.Context, path string, f url.Values, out any) error {
-	base := c.cfg.MerchantPGURL
-	if base == "" {
-		base = c.cfg.BaseURL
-	}
 	body := f.Encode()
-	req, e := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(base, "/")+path, strings.NewReader(body))
+	req, e := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(c.merchantURL(), "/")+path, strings.NewReader(body))
 	if e != nil {
 		return e
 	}

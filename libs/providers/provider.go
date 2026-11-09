@@ -18,8 +18,8 @@ type Provider interface {
 	Name() string
 	CreateVA(ctx context.Context, req CreateVARequest) (*PaymentResult, error)
 	CreateQRIS(ctx context.Context, req CreateQRISRequest) (*PaymentResult, error)
-	CheckStatus(ctx context.Context, providerRef string) (*StatusResult, error)
-	Cancel(ctx context.Context, providerRef string) error
+	CheckStatus(ctx context.Context, method, providerRef string) (*StatusResult, error)
+	Cancel(ctx context.Context, method, providerRef string) error
 	ParseCallback(r *http.Request, body []byte) (*CallbackEvent, error) // verifikasi signature + normalisasi
 	CallbackResponse(ev *CallbackEvent, err error) (int, any)           // format balasan sesuai spec provider
 }

@@ -154,7 +154,7 @@ func expirePayments(ctx context.Context, db *gorm.DB) error {
 			continue
 		}
 		if prov, e := providers.Get(p.Provider); e == nil && p.ProviderRef != "" {
-			_ = prov.Cancel(ctx, p.ProviderRef)
+			_ = prov.Cancel(ctx, p.Method, p.ProviderRef)
 		}
 		if e := helpers.TransitionPayment(db, p, models.StatusExpired, nil); e != nil && !errors.Is(e, helpers.ErrStateConflict) {
 			log.Printf("expire %s: %v", p.ID, e)
@@ -190,7 +190,7 @@ func syncFromProvider(ctx context.Context, db *gorm.DB, p *models.Payment) bool 
 	if e != nil || p.ProviderRef == "" {
 		return false
 	}
-	st, e := prov.CheckStatus(ctx, p.ProviderRef)
+	st, e := prov.CheckStatus(ctx, p.Method, p.ProviderRef)
 	if e != nil {
 		if !errors.Is(e, providers.ErrNotSupported) {
 			log.Printf("check status %s: %v", p.ID, e)

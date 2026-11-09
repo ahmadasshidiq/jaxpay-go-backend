@@ -215,7 +215,7 @@ func (s *PaymentService) cancel(ctx context.Context, clientID, id uuid.UUID) (*m
 	if e != nil {
 		return nil, e
 	}
-	if e = prov.Cancel(ctx, p.ProviderRef); e != nil {
+	if e = prov.Cancel(ctx, p.Method, p.ProviderRef); e != nil {
 		return nil, fmt.Errorf("%w: %v", errProviderFailure, e)
 	}
 	if e = helpers.TransitionPayment(s.DB, p, models.StatusCancelled, nil); errors.Is(e, helpers.ErrStateConflict) {
@@ -233,7 +233,7 @@ func (s *PaymentService) checkStatus(ctx context.Context, clientID, id uuid.UUID
 	if e != nil {
 		return nil, e
 	}
-	st, e := prov.CheckStatus(ctx, p.ProviderRef)
+	st, e := prov.CheckStatus(ctx, p.Method, p.ProviderRef)
 	if errors.Is(e, providers.ErrNotSupported) {
 		return p, nil
 	}

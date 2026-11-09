@@ -98,6 +98,11 @@ func (c *Client) verify(method, path string, body []byte, ts, signature string) 
 
 // do mengirim request SNAP ke Espay. path = relative URL, mis. /api/v1.0/qr/qr-mpm-generate.
 func (c *Client) do(ctx context.Context, method, path string, in, out any) error {
+	return c.doAt(ctx, c.cfg.BaseURL, method, path, in, out)
+}
+
+// doAt = do dengan base URL tertentu (signature tetap memakai relative path).
+func (c *Client) doAt(ctx context.Context, base, method, path string, in, out any) error {
 	// body dikirim apa adanya (tidak di-minify); minify hanya dilakukan di stringToSign
 	body, e := json.MarshalIndent(in, "", "  ")
 	if e != nil {
@@ -108,7 +113,7 @@ func (c *Client) do(ctx context.Context, method, path string, in, out any) error
 	if e != nil {
 		return e
 	}
-	req, e := http.NewRequestWithContext(ctx, method, strings.TrimRight(c.cfg.BaseURL, "/")+path, bytes.NewReader(body))
+	req, e := http.NewRequestWithContext(ctx, method, strings.TrimRight(base, "/")+path, bytes.NewReader(body))
 	if e != nil {
 		return e
 	}

@@ -47,7 +47,10 @@ func (c *Client) CreateQRIS(ctx context.Context, req providers.CreateQRISRequest
 	return &providers.PaymentResult{ProviderRef: ref, QRString: &out.QRContent, ExpiredAt: &exp}, nil
 }
 
-func (c *Client) CheckStatus(ctx context.Context, providerRef string) (*providers.StatusResult, error) {
+func (c *Client) CheckStatus(ctx context.Context, method, providerRef string) (*providers.StatusResult, error) {
+	if method == "va" {
+		return c.checkVAStatus(ctx, providerRef)
+	}
 	in := map[string]any{
 		"originalPartnerReferenceNo": providerRef,
 		"serviceCode":                "47",
@@ -75,7 +78,10 @@ func (c *Client) CheckStatus(ctx context.Context, providerRef string) (*provider
 	return r, nil
 }
 
-func (c *Client) Cancel(ctx context.Context, providerRef string) error {
+func (c *Client) Cancel(ctx context.Context, method, providerRef string) error {
+	if method == "va" {
+		return c.deleteVA(ctx, providerRef)
+	}
 	in := map[string]any{
 		"originalPartnerReferenceNo": providerRef,
 		"merchantId":                 c.cfg.MerchantID,
