@@ -22,6 +22,7 @@ var (
 	errRefConflict     = errors.New("reference_id already used with different method or amount")
 	errProviderFailure = errors.New("provider request failed")
 	errInvalidBank     = errors.New("bank_code not supported by provider")
+	errInvalidProduct  = errors.New("product_code not supported by provider")
 )
 
 const defaultExpiredMinutes = 24 * 60
@@ -103,6 +104,18 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 			return nil, false, errInvalidBank
 		}
 	}
+	// Kode bank direct debit mengikuti master produk, bukan input client.
+	if d.Method == "direct_debit" {
+		var b models.ProviderBank
+		e = s.DB.Where("provider = ? AND product_code = ? AND is_va = ? AND is_active = ?", prov.Name(), d.ProductCode, false, true).First(&b).Error
+		if errors.Is(e, gorm.ErrRecordNotFound) {
+			return nil, false, errInvalidProduct
+		}
+		if e != nil {
+			return nil, false, e
+		}
+		d.BankCode = b.BankCode
+	}
 
 	minutes := d.ExpiredMinutes
 	if minutes == 0 {
@@ -118,9 +131,11 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 	if d.BankCode != "" {
 		p.BankCode = &d.BankCode
 	}
-	if d.Method == "va" {
-		// Espay memanggil callback inquiry (virtualAccountNo = order_id) sebelum sendinvoice selesai,
-		// jadi provider_ref harus sudah tersimpan saat insert.
+	if d.ProductCode != "" && d.Method == "direct_debit" {
+		p.ProductCode, p.ReturnURL = &d.ProductCode, &d.ReturnURL
+	}
+	if d.Method == "va" || d.Method == "direct_debit" {
+		// Espay memanggil callback inquiry dengan id transaksi ini, jadi provider_ref harus sudah tersimpan saat insert.
 		p.ProviderRef = providers.NewProviderRef()
 	}
 	if d.Metadata != nil {
@@ -145,12 +160,12 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 		p.Status = models.StatusFailed
 		return p, true, fmt.Errorf("%w: %v", errProviderFailure, e)
 	}
-	p.ProviderRef, p.VANumber, p.QRString = res.ProviderRef, res.VANumber, res.QRString
+	p.ProviderRef, p.VANumber, p.QRString, p.RedirectURL = res.ProviderRef, res.VANumber, res.QRString, res.RedirectURL
 	if res.ExpiredAt != nil {
 		p.ExpiredAt = res.ExpiredAt
 	}
 	e = s.DB.Model(p).Updates(map[string]any{
-		"provider_ref": p.ProviderRef, "va_number": p.VANumber, "qr_string": p.QRString, "expired_at": p.ExpiredAt,
+		"provider_ref": p.ProviderRef, "va_number": p.VANumber, "qr_string": p.QRString, "redirect_url": p.RedirectURL, "expired_at": p.ExpiredAt,
 	}).Error
 	return p, true, e
 }
@@ -195,6 +210,11 @@ func (s *PaymentService) callProvider(ctx context.Context, prov providers.Provid
 			r.BankCode = *p.BankCode
 		}
 		return prov.CreateVA(ctx, r)
+	case "direct_debit":
+		return prov.CreateDirectDebit(ctx, providers.CreateDirectDebitRequest{
+			ProviderRef: p.ProviderRef, Amount: p.Amount, CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail,
+			CustomerPhone: p.CustomerPhone, BankCode: *p.BankCode, ProductCode: *p.ProductCode, ReturnURL: *p.ReturnURL, ExpiredAt: *p.ExpiredAt,
+		})
 	case "qris":
 		return prov.CreateQRIS(ctx, providers.CreateQRISRequest{
 			ReferenceID: p.ReferenceID, Amount: p.Amount, Description: p.Description, ExpiredAt: *p.ExpiredAt,

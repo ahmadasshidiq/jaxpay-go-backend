@@ -48,7 +48,7 @@ func (c *Client) CreateQRIS(ctx context.Context, req providers.CreateQRISRequest
 }
 
 func (c *Client) CheckStatus(ctx context.Context, method, providerRef string) (*providers.StatusResult, error) {
-	if method == "va" {
+	if method == "va" || method == "direct_debit" {
 		return c.checkVAStatus(ctx, providerRef)
 	}
 	in := map[string]any{
@@ -79,8 +79,11 @@ func (c *Client) CheckStatus(ctx context.Context, method, providerRef string) (*
 }
 
 func (c *Client) Cancel(ctx context.Context, method, providerRef string) error {
-	if method == "va" {
+	switch method {
+	case "va":
 		return c.deleteVA(ctx, providerRef)
+	case "direct_debit":
+		return providers.ErrNotSupported // Espay tidak menyediakan pembatalan untuk layanan ini
 	}
 	in := map[string]any{
 		"originalPartnerReferenceNo": providerRef,

@@ -28,7 +28,7 @@ func clientID(x *gin.Context) uuid.UUID {
 
 func respondServiceError(x *gin.Context, e error) {
 	switch {
-	case errors.Is(e, errRouteNotFound), errors.Is(e, providers.ErrNotSupported), errors.Is(e, errInvalidBank):
+	case errors.Is(e, errRouteNotFound), errors.Is(e, providers.ErrNotSupported), errors.Is(e, errInvalidBank), errors.Is(e, errInvalidProduct):
 		helpers.RespondError(x, module, 422, e)
 	case errors.Is(e, errNotPending), errors.Is(e, errRefConflict):
 		helpers.RespondError(x, module, 409, e)
@@ -41,7 +41,7 @@ func respondServiceError(x *gin.Context, e error) {
 
 // Create godoc
 // @Summary      Buat transaksi pembayaran
-// @Description  Membuat VA / QRIS. Untuk method "va", bank_code (3 digit kode bank Espay) wajib diisi. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).
+// @Description  Membuat VA / QRIS / Direct Debit. Untuk method "va", bank_code wajib diisi. Untuk method "direct_debit", product_code dan return_url wajib diisi; arahkan customer ke redirect_url pada response. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).
 // @Tags         Payments
 // @Accept       json
 // @Produce      json
@@ -99,7 +99,7 @@ func (c *PaymentController) VABanks(x *gin.Context) {
 // @Param        limit query int false "Limit (maks 100)"
 // @Param        sort query string false "Sort, mis. -created_at"
 // @Param        status query string false "Status" Enums(PENDING, PAID, EXPIRED, FAILED, CANCELLED)
-// @Param        method query string false "Method" Enums(qris, va)
+// @Param        method query string false "Method" Enums(qris, va, direct_debit)
 // @Param        reference_id query string false "Reference ID"
 // @Success      200 {object} helpers.Response{data=helpers.PaginatedResult{items=[]PaymentResponse}}
 // @Failure      400 {object} helpers.Response

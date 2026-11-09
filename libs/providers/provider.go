@@ -18,6 +18,7 @@ type Provider interface {
 	Name() string
 	CreateVA(ctx context.Context, req CreateVARequest) (*PaymentResult, error)
 	CreateQRIS(ctx context.Context, req CreateQRISRequest) (*PaymentResult, error)
+	CreateDirectDebit(ctx context.Context, req CreateDirectDebitRequest) (*PaymentResult, error)
 	CheckStatus(ctx context.Context, method, providerRef string) (*StatusResult, error)
 	Cancel(ctx context.Context, method, providerRef string) error
 	ParseCallback(r *http.Request, body []byte) (*CallbackEvent, error) // verifikasi signature + normalisasi
@@ -54,6 +55,18 @@ type CreateVARequest struct {
 	ExpiredAt     time.Time
 }
 
+type CreateDirectDebitRequest struct {
+	ProviderRef   string // sudah tersimpan di DB sebelum request agar callback inquiry menemukannya
+	Amount        int64
+	CustomerName  string
+	CustomerEmail string
+	CustomerPhone string
+	BankCode      string
+	ProductCode   string
+	ReturnURL     string
+	ExpiredAt     time.Time
+}
+
 type CreateQRISRequest struct {
 	ReferenceID string
 	Amount      int64
@@ -65,6 +78,7 @@ type PaymentResult struct {
 	ProviderRef string
 	VANumber    *string
 	QRString    *string
+	RedirectURL *string
 	ExpiredAt   *time.Time
 }
 

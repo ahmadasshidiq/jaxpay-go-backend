@@ -212,11 +212,22 @@ definitions:
         enum:
         - qris
         - va
+        - direct_debit
         example: va
+        type: string
+      product_code:
+        description: wajib untuk method direct_debit
+        example: GOPAYLINK
+        maxLength: 50
         type: string
       reference_id:
         example: INV-20261106-0001
         maxLength: 100
+        type: string
+      return_url:
+        description: wajib untuk method direct_debit
+        example: https://merchant.example.com/payment/return
+        maxLength: 255
         type: string
     required:
     - amount
@@ -250,9 +261,13 @@ definitions:
         type: string
       paid_at:
         type: string
+      product_code:
+        type: string
       provider:
         type: string
       qr_string:
+        type: string
+      redirect_url:
         type: string
       reference_id:
         type: string
@@ -319,6 +334,7 @@ definitions:
         enum:
         - qris
         - va
+        - direct_debit
         type: string
       provider:
         maxLength: 50
@@ -730,6 +746,7 @@ paths:
         enum:
         - qris
         - va
+        - direct_debit
         in: query
         name: method
         type: string
@@ -768,9 +785,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Membuat VA / QRIS. Untuk method "va", bank_code (3 digit kode bank
-        Espay) wajib diisi. Idempotent berdasarkan reference_id (request ulang mengembalikan
-        payment yang sama dengan status 200).
+      description: Membuat VA / QRIS / Direct Debit. Untuk method "va", bank_code
+        wajib diisi. Untuk method "direct_debit", product_code dan return_url wajib
+        diisi; arahkan customer ke redirect_url pada response. Idempotent berdasarkan
+        reference_id (request ulang mengembalikan payment yang sama dengan status
+        200).
       parameters:
       - description: Payment
         in: body

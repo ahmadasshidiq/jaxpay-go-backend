@@ -72,6 +72,9 @@ type Payment struct {
 	Status        PaymentStatus  `gorm:"size:20;index" json:"status"`
 	VANumber      *string        `gorm:"size:50;index" json:"va_number"`
 	BankCode      *string        `gorm:"size:10" json:"bank_code"`
+	ProductCode   *string        `gorm:"size:50" json:"product_code"`
+	ReturnURL     *string        `gorm:"size:255" json:"return_url"`
+	RedirectURL   *string        `gorm:"type:text" json:"redirect_url"`
 	QRString      *string        `gorm:"type:text" json:"qr_string"`
 	CustomerName  string         `gorm:"size:255" json:"customer_name"`
 	CustomerEmail string         `gorm:"size:255" json:"customer_email"`

@@ -634,7 +634,8 @@ const docTemplate = `{
                     {
                         "enum": [
                             "qris",
-                            "va"
+                            "va",
+                            "direct_debit"
                         ],
                         "type": "string",
                         "description": "Method",
@@ -696,7 +697,7 @@ const docTemplate = `{
                         "ClientAPIKey": []
                     }
                 ],
-                "description": "Membuat VA / QRIS. Untuk method \"va\", bank_code (3 digit kode bank Espay) wajib diisi. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).",
+                "description": "Membuat VA / QRIS / Direct Debit. Untuk method \"va\", bank_code wajib diisi. Untuk method \"direct_debit\", product_code dan return_url wajib diisi; arahkan customer ke redirect_url pada response. Idempotent berdasarkan reference_id (request ulang mengembalikan payment yang sama dengan status 200).",
                 "consumes": [
                     "application/json"
                 ],
@@ -2092,14 +2093,27 @@ const docTemplate = `{
                     "type": "string",
                     "enum": [
                         "qris",
-                        "va"
+                        "va",
+                        "direct_debit"
                     ],
                     "example": "va"
+                },
+                "product_code": {
+                    "description": "wajib untuk method direct_debit",
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "GOPAYLINK"
                 },
                 "reference_id": {
                     "type": "string",
                     "maxLength": 100,
                     "example": "INV-20261106-0001"
+                },
+                "return_url": {
+                    "description": "wajib untuk method direct_debit",
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "https://merchant.example.com/payment/return"
                 }
             }
         },
@@ -2142,10 +2156,16 @@ const docTemplate = `{
                 "paid_at": {
                     "type": "string"
                 },
+                "product_code": {
+                    "type": "string"
+                },
                 "provider": {
                     "type": "string"
                 },
                 "qr_string": {
+                    "type": "string"
+                },
+                "redirect_url": {
                     "type": "string"
                 },
                 "reference_id": {
@@ -2245,7 +2265,8 @@ const docTemplate = `{
                     "type": "string",
                     "enum": [
                         "qris",
-                        "va"
+                        "va",
+                        "direct_debit"
                     ]
                 },
                 "provider": {

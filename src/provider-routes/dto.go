@@ -11,7 +11,7 @@ type DefaultFindDTO struct {
 
 type CreateDTO struct {
 	ClientID string `json:"client_id" binding:"required,uuid"`
-	Method   string `json:"method" binding:"required,oneof=qris va"`
+	Method   string `json:"method" binding:"required,oneof=qris va direct_debit"`
 	Provider string `json:"provider" binding:"required,max=50"`
 	IsActive *bool  `json:"is_active"`
 }
