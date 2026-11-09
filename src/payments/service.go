@@ -134,10 +134,8 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 	if d.ProductCode != "" && d.Method == "direct_debit" {
 		p.ProductCode, p.ReturnURL = &d.ProductCode, &d.ReturnURL
 	}
-	if d.Method == "va" || d.Method == "direct_debit" {
-		// Espay memanggil callback inquiry dengan id transaksi ini, jadi provider_ref harus sudah tersimpan saat insert.
-		p.ProviderRef = providers.NewProviderRef()
-	}
+	// Espay memanggil callback inquiry dengan id transaksi ini saat pembuatan transaksi, jadi provider_ref harus sudah tersimpan saat insert.
+	p.ProviderRef = providers.NewProviderRef()
 	if d.Metadata != nil {
 		b, e := json.Marshal(d.Metadata)
 		if e != nil {
@@ -217,7 +215,7 @@ func (s *PaymentService) callProvider(ctx context.Context, prov providers.Provid
 		})
 	case "qris":
 		return prov.CreateQRIS(ctx, providers.CreateQRISRequest{
-			ReferenceID: p.ReferenceID, Amount: p.Amount, Description: p.Description, ExpiredAt: *p.ExpiredAt,
+			ProviderRef: p.ProviderRef, ReferenceID: p.ReferenceID, Amount: p.Amount, Description: p.Description, ExpiredAt: *p.ExpiredAt,
 		})
 	}
 	return nil, providers.ErrNotSupported

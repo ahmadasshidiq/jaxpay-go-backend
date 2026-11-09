@@ -2,10 +2,7 @@ package espay
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"net/http"
-	"strings"
 
 	"jaxpay-go-backend/libs/models"
 	"jaxpay-go-backend/libs/providers"
@@ -18,9 +15,10 @@ const (
 )
 
 func (c *Client) CreateQRIS(ctx context.Context, req providers.CreateQRISRequest) (*providers.PaymentResult, error) {
-	b := make([]byte, 10)
-	_, _ = rand.Read(b)
-	ref := "JXP" + strings.ToUpper(hex.EncodeToString(b))
+	ref := req.ProviderRef
+	if ref == "" {
+		ref = providers.NewProviderRef()
+	}
 	// struct (bukan map) agar urutan field sama dengan dokumentasi Espay
 	in := struct {
 		PartnerReferenceNo string            `json:"partnerReferenceNo"`

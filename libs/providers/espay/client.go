@@ -152,7 +152,8 @@ type snapResponse struct {
 	ResponseMessage string `json:"responseMessage"`
 }
 
-func (r snapResponse) ok() bool { return strings.HasPrefix(r.ResponseCode, "200") }
+// ok: semua kode HTTP 2xx dianggap sukses, mis. 2024700 pada qr-mpm-generate.
+func (r snapResponse) ok() bool { return strings.HasPrefix(r.ResponseCode, "2") }
 
 func (r snapResponse) err(op string) error {
 	return fmt.Errorf("espay %s: %s %s", op, r.ResponseCode, r.ResponseMessage)

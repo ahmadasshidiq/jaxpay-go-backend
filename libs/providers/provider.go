@@ -68,6 +68,7 @@ type CreateDirectDebitRequest struct {
 }
 
 type CreateQRISRequest struct {
+	ProviderRef string // sudah tersimpan di DB sebelum request agar callback inquiry menemukannya
 	ReferenceID string
 	Amount      int64
 	Description string

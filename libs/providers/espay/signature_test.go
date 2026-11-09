@@ -1,9 +1,17 @@
 package espay
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"jaxpay-go-backend/libs/config"
+	"jaxpay-go-backend/libs/providers"
 )
 
 // Contoh dari dokumentasi Espay.
@@ -58,5 +66,29 @@ func TestSignVerifyRoundTrip(t *testing.T) {
 	}
 	if c.verify("POST", "/x", []byte(`{"a":2}`), "2024-03-14T07:49:28+07:00", sig) {
 		t.Fatal("tampered body accepted")
+	}
+}
+
+func TestCreateQRISUsesProviderRef(t *testing.T) {
+	k, _ := rsa.GenerateKey(rand.Reader, 2048)
+	var body map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(raw, &body)
+		_, _ = w.Write([]byte(`{"responseCode":"2024700","responseMessage":"ok","qrContent":"000201"}`))
+	}))
+	defer srv.Close()
+	c := &Client{cfg: config.EspayConfig{BaseURL: srv.URL}, http: srv.Client(), privKey: k}
+	res, e := c.CreateQRIS(context.Background(), providers.CreateQRISRequest{ProviderRef: "JXP1", Amount: 10000})
+	if e != nil || res.ProviderRef != "JXP1" || body["partnerReferenceNo"] != "JXP1" {
+		t.Fatalf("%v %+v %v", e, res, body)
+	}
+}
+
+func TestSnapResponseOK(t *testing.T) {
+	for code, want := range map[string]bool{"2004700": true, "2024700": true, "4004700": false, "5004700": false, "": false} {
+		if got := (snapResponse{ResponseCode: code}).ok(); got != want {
+			t.Errorf("%q: got %v", code, got)
+		}
 	}
 }
