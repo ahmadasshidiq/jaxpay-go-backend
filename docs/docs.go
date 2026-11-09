@@ -2162,7 +2162,13 @@ const docTemplate = `{
                 "provider": {
                     "type": "string"
                 },
+                "provider_data": {
+                    "type": "object"
+                },
                 "qr_string": {
+                    "type": "string"
+                },
+                "qr_url": {
                     "type": "string"
                 },
                 "redirect_url": {

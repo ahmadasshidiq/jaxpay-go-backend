@@ -73,11 +73,13 @@ type Payment struct {
 	ReturnURL     *string        `gorm:"size:255" json:"return_url"`
 	RedirectURL   *string        `gorm:"type:text" json:"redirect_url"`
 	QRString      *string        `gorm:"type:text" json:"qr_string"`
+	QRURL         *string        `gorm:"column:qr_url;type:text" json:"qr_url"`
 	CustomerName  string         `gorm:"size:255" json:"customer_name"`
 	CustomerEmail string         `gorm:"size:255" json:"customer_email"`
 	CustomerPhone string         `gorm:"size:20" json:"customer_phone"`
 	Description   string         `gorm:"size:500" json:"description"`
 	Metadata      datatypes.JSON `json:"metadata" swaggertype:"object"`
+	ProviderData  datatypes.JSON `json:"provider_data" swaggertype:"object"`
 	ExpiredAt     *time.Time     `json:"expired_at"`
 	PaidAt        *time.Time     `json:"paid_at"`
 	CreatedAt     time.Time      `json:"created_at"`

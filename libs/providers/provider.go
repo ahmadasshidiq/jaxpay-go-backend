@@ -75,11 +75,13 @@ type CreateQRISRequest struct {
 }
 
 type PaymentResult struct {
-	ProviderRef string
-	VANumber    *string
-	QRString    *string
-	RedirectURL *string
-	ExpiredAt   *time.Time
+	ProviderRef  string
+	VANumber     *string
+	QRString     *string
+	QRURL        *string
+	RedirectURL  *string
+	ExpiredAt    *time.Time
+	ProviderData []byte
 }
 
 type StatusResult struct {

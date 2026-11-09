@@ -2,6 +2,7 @@ package espay
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"jaxpay-go-backend/libs/models"
@@ -31,8 +32,10 @@ func (c *Client) CreateQRIS(ctx context.Context, req providers.CreateQRISRequest
 	}
 	var out struct {
 		snapResponse
-		ReferenceNo string `json:"referenceNo"`
-		QRContent   string `json:"qrContent"`
+		ReferenceNo    string          `json:"referenceNo"`
+		QRContent      string          `json:"qrContent"`
+		QRURL          string          `json:"qrUrl"`
+		AdditionalInfo json.RawMessage `json:"additionalInfo"`
 	}
 	if e := c.do(ctx, http.MethodPost, pathQRGenerate, in, &out); e != nil {
 		return nil, e
@@ -41,7 +44,11 @@ func (c *Client) CreateQRIS(ctx context.Context, req providers.CreateQRISRequest
 		return nil, out.err("qr-mpm-generate")
 	}
 	exp := req.ExpiredAt
-	return &providers.PaymentResult{ProviderRef: ref, QRString: &out.QRContent, ExpiredAt: &exp}, nil
+	res := &providers.PaymentResult{ProviderRef: ref, QRString: &out.QRContent, ExpiredAt: &exp, ProviderData: out.AdditionalInfo}
+	if out.QRURL != "" {
+		res.QRURL = &out.QRURL
+	}
+	return res, nil
 }
 
 func (c *Client) CheckStatus(ctx context.Context, method, providerRef string) (*providers.StatusResult, error) {

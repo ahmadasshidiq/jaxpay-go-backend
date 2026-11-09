@@ -158,8 +158,9 @@ func (s *PaymentService) create(ctx context.Context, client *models.Client, d Cr
 	if res.ExpiredAt != nil {
 		p.ExpiredAt = res.ExpiredAt
 	}
+	p.QRURL, p.ProviderData = res.QRURL, datatypes.JSON(res.ProviderData)
 	e = s.DB.Model(p).Updates(map[string]any{
-		"provider_ref": p.ProviderRef, "va_number": p.VANumber, "qr_string": p.QRString, "redirect_url": p.RedirectURL, "expired_at": p.ExpiredAt,
+		"provider_ref": p.ProviderRef, "va_number": p.VANumber, "qr_string": p.QRString, "qr_url": p.QRURL, "redirect_url": p.RedirectURL, "provider_data": p.ProviderData, "expired_at": p.ExpiredAt,
 	}).Error
 	return p, true, e
 }

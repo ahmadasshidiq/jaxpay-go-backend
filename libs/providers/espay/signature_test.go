@@ -73,12 +73,12 @@ func TestCreateQRISUsesProviderRef(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ := io.ReadAll(r.Body)
 		_ = json.Unmarshal(raw, &body)
-		_, _ = w.Write([]byte(`{"responseCode":"2024700","responseMessage":"ok","qrContent":"000201"}`))
+		_, _ = w.Write([]byte(`{"responseCode":"2024700","responseMessage":"ok","qrContent":"000201","qrUrl":"https://qr.test/1","additionalInfo":{"referenceNo":"ESP1","amount":"10000"}}`))
 	}))
 	defer srv.Close()
 	c := &Client{cfg: config.EspayConfig{BaseURL: srv.URL}, http: srv.Client(), privKey: k}
 	res, e := c.CreateQRIS(context.Background(), providers.CreateQRISRequest{ProviderRef: "JXP1", Amount: 10000})
-	if e != nil || res.ProviderRef != "JXP1" || body["partnerReferenceNo"] != "JXP1" {
+	if e != nil || res.ProviderRef != "JXP1" || res.QRURL == nil || *res.QRURL != "https://qr.test/1" || body["partnerReferenceNo"] != "JXP1" || string(res.ProviderData) != `{"referenceNo":"ESP1","amount":"10000"}` {
 		t.Fatalf("%v %+v %v", e, res, body)
 	}
 }

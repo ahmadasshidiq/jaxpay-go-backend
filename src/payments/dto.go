@@ -46,10 +46,12 @@ type PaymentResponse struct {
 	ProductCode   *string              `json:"product_code,omitempty"`
 	RedirectURL   *string              `json:"redirect_url,omitempty"`
 	QRString      *string              `json:"qr_string,omitempty"`
+	QRURL         *string              `json:"qr_url,omitempty"`
 	CustomerName  string               `json:"customer_name"`
 	CustomerEmail string               `json:"customer_email,omitempty"`
 	Description   string               `json:"description,omitempty"`
 	Metadata      datatypes.JSON       `json:"metadata,omitempty" swaggertype:"object"`
+	ProviderData  datatypes.JSON       `json:"provider_data,omitempty" swaggertype:"object"`
 	ExpiredAt     *time.Time           `json:"expired_at"`
 	PaidAt        *time.Time           `json:"paid_at"`
 	CreatedAt     time.Time            `json:"created_at"`
@@ -64,8 +66,8 @@ type VABankResponse struct {
 func toResponse(p *models.Payment) PaymentResponse {
 	return PaymentResponse{
 		ID: p.ID, ReferenceID: p.ReferenceID, Method: p.Method, Provider: p.Provider,
-		Amount: p.Amount, Currency: p.Currency, Status: p.Status, VANumber: p.VANumber, BankCode: p.BankCode, ProductCode: p.ProductCode, RedirectURL: p.RedirectURL, QRString: p.QRString,
+		Amount: p.Amount, Currency: p.Currency, Status: p.Status, VANumber: p.VANumber, BankCode: p.BankCode, ProductCode: p.ProductCode, RedirectURL: p.RedirectURL, QRString: p.QRString, QRURL: p.QRURL,
 		CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail, Description: p.Description,
-		Metadata: p.Metadata, ExpiredAt: p.ExpiredAt, PaidAt: p.PaidAt, CreatedAt: p.CreatedAt,
+		Metadata: p.Metadata, ProviderData: p.ProviderData, ExpiredAt: p.ExpiredAt, PaidAt: p.PaidAt, CreatedAt: p.CreatedAt,
 	}
 }
