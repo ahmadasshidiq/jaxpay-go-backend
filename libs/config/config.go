@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/joho/godotenv"
@@ -22,6 +23,17 @@ type EspayConfig struct {
 
 func (c EspayConfig) Enabled() bool { return c.BaseURL != "" && c.PartnerID != "" }
 
+type CORSConfig struct {
+	AllowOrigins []string
+	AllowMethods []string
+	AllowHeaders []string
+}
+
+const (
+	defaultCORSMethods = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+	defaultCORSHeaders = "Authorization, Content-Type, X-API-Key, X-Timestamp, X-Signature"
+)
+
 type Config struct {
 	AppEnv             string
 	AppPort            string
@@ -31,6 +43,7 @@ type Config struct {
 	EncryptionKey      string
 	RateLimitPerMinute int
 	Espay              EspayConfig
+	CORS               CORSConfig
 }
 
 var (
@@ -49,6 +62,11 @@ func Get() *Config {
 			RedisURL:           env("REDIS_URL", ""),
 			EncryptionKey:      env("ENCRYPTION_KEY", ""),
 			RateLimitPerMinute: envInt("RATE_LIMIT_PER_MINUTE", 120),
+			CORS: CORSConfig{
+				AllowOrigins: envList("CORS_ALLOW_ORIGINS", "*"),
+				AllowMethods: envList("CORS_ALLOW_METHODS", defaultCORSMethods),
+				AllowHeaders: append(splitList(defaultCORSHeaders), envList("CORS_EXTRA_HEADERS", "")...),
+			},
 			Espay: EspayConfig{
 				BaseURL:        env("ESPAY_BASE_URL", ""),
 				PartnerID:      env("ESPAY_PARTNER_ID", ""),
@@ -77,4 +95,16 @@ func envInt(k string, def int) int {
 		return v
 	}
 	return def
+}
+
+func envList(k, def string) []string { return splitList(env(k, def)) }
+
+func splitList(s string) []string {
+	var out []string
+	for _, v := range strings.Split(s, ",") {
+		if v = strings.TrimSpace(v); v != "" {
+			out = append(out, v)
+		}
+	}
+	return out
 }

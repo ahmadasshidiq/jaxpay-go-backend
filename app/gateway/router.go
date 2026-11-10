@@ -12,7 +12,7 @@ import (
 
 func NewRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger(), gin.Recovery(), CORS())
+	r.Use(gin.Logger(), gin.Recovery(), CORS(cfg.CORS))
 
 	r.GET("/health", func(x *gin.Context) {
 		if sqlDB, e := db.DB(); e != nil || sqlDB.Ping() != nil {
