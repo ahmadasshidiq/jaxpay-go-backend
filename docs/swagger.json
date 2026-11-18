@@ -8,6 +8,114 @@
     },
     "basePath": "/api/v1",
     "paths": {
+        "/api/webhooks/espay/v1.0/transfer-va/inquiry": {
+            "post": {
+                "description": "Path standar SNAP Espay untuk inquiry tagihan Virtual Account. Logika sama dengan /callbacks/espay/inquiry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Callbacks"
+                ],
+                "summary": "Espay SNAP VA inquiry",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Timestamp ISO-8601",
+                        "name": "X-TIMESTAMP",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SHA256withRSA signature (public key provider)",
+                        "name": "X-SIGNATURE",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload provider",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPVAInquiryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/webhooks/espay/v1.0/transfer-va/payment": {
+            "post": {
+                "description": "Path standar SNAP Espay untuk notifikasi pembayaran Virtual Account. Logika sama dengan /callbacks/espay/payment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Callbacks"
+                ],
+                "summary": "Espay SNAP VA payment notification",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Timestamp ISO-8601",
+                        "name": "X-TIMESTAMP",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SHA256withRSA signature (public key provider)",
+                        "name": "X-SIGNATURE",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload provider",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPVAPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SNAPResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/callbacks/{provider}/inquiry": {
             "post": {
                 "description": "Provider menanyakan detail tagihan (mis. Espay service code 24). Signature diverifikasi oleh adapter provider; balasan mengikuti format provider.",
@@ -1776,6 +1884,19 @@
         }
     },
     "definitions": {
+        "callbacks.SNAPAmount": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string",
+                    "example": "IDR"
+                },
+                "value": {
+                    "type": "string",
+                    "example": "10000.00"
+                }
+            }
+        },
         "callbacks.SNAPResponse": {
             "type": "object",
             "properties": {
@@ -1784,6 +1905,71 @@
                 },
                 "responseMessage": {
                     "type": "string"
+                }
+            }
+        },
+        "callbacks.SNAPVAInquiryRequest": {
+            "type": "object",
+            "properties": {
+                "customerNo": {
+                    "type": "string",
+                    "example": "SGWJAXERTEKNOINDO"
+                },
+                "inquiryRequestId": {
+                    "type": "string",
+                    "example": "INQ-20261112-0006"
+                },
+                "partnerServiceId": {
+                    "type": "string",
+                    "example": "   Espay"
+                },
+                "trxDateInit": {
+                    "type": "string",
+                    "example": "2026-11-12T09:31:00+07:00"
+                },
+                "virtualAccountNo": {
+                    "type": "string",
+                    "example": "JXPEA6FFAAB9345C9016C3F"
+                }
+            }
+        },
+        "callbacks.SNAPVAPaymentAdditionalInfo": {
+            "type": "object",
+            "properties": {
+                "transactionStatus": {
+                    "type": "string",
+                    "example": "S"
+                }
+            }
+        },
+        "callbacks.SNAPVAPaymentRequest": {
+            "type": "object",
+            "properties": {
+                "additionalInfo": {
+                    "$ref": "#/definitions/callbacks.SNAPVAPaymentAdditionalInfo"
+                },
+                "customerNo": {
+                    "type": "string",
+                    "example": "SGWJAXERTEKNOINDO"
+                },
+                "partnerServiceId": {
+                    "type": "string",
+                    "example": "   Espay"
+                },
+                "paymentRequestId": {
+                    "type": "string",
+                    "example": "PAY-20261112-0006"
+                },
+                "totalAmount": {
+                    "$ref": "#/definitions/callbacks.SNAPAmount"
+                },
+                "trxDateTime": {
+                    "type": "string",
+                    "example": "2026-11-12T09:35:00+07:00"
+                },
+                "virtualAccountNo": {
+                    "type": "string",
+                    "example": "JXPEA6FFAAB9345C9016C3F"
                 }
             }
         },

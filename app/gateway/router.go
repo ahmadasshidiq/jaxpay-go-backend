@@ -5,6 +5,7 @@ import (
 
 	_ "jaxpay-go-backend/docs"
 	"jaxpay-go-backend/libs/config"
+	"jaxpay-go-backend/src/callbacks"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -28,5 +29,7 @@ func NewRouter(db *gorm.DB, cfg *config.Config) *gin.Engine {
 
 	api := r.Group("/api/v1", RateLimiter(cfg.RateLimitPerMinute))
 	RegisterAllModules(api, db)
+
+	callbacks.RegisterSNAPRoutes(r.Group("", RateLimiter(cfg.RateLimitPerMinute)), db)
 	return r
 }

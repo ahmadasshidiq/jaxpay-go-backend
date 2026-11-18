@@ -1,10 +1,65 @@
 basePath: /api/v1
 definitions:
+  callbacks.SNAPAmount:
+    properties:
+      currency:
+        example: IDR
+        type: string
+      value:
+        example: "10000.00"
+        type: string
+    type: object
   callbacks.SNAPResponse:
     properties:
       responseCode:
         type: string
       responseMessage:
+        type: string
+    type: object
+  callbacks.SNAPVAInquiryRequest:
+    properties:
+      customerNo:
+        example: SGWJAXERTEKNOINDO
+        type: string
+      inquiryRequestId:
+        example: INQ-20261112-0006
+        type: string
+      partnerServiceId:
+        example: '   Espay'
+        type: string
+      trxDateInit:
+        example: "2026-11-12T09:31:00+07:00"
+        type: string
+      virtualAccountNo:
+        example: JXPEA6FFAAB9345C9016C3F
+        type: string
+    type: object
+  callbacks.SNAPVAPaymentAdditionalInfo:
+    properties:
+      transactionStatus:
+        example: S
+        type: string
+    type: object
+  callbacks.SNAPVAPaymentRequest:
+    properties:
+      additionalInfo:
+        $ref: '#/definitions/callbacks.SNAPVAPaymentAdditionalInfo'
+      customerNo:
+        example: SGWJAXERTEKNOINDO
+        type: string
+      partnerServiceId:
+        example: '   Espay'
+        type: string
+      paymentRequestId:
+        example: PAY-20261112-0006
+        type: string
+      totalAmount:
+        $ref: '#/definitions/callbacks.SNAPAmount'
+      trxDateTime:
+        example: "2026-11-12T09:35:00+07:00"
+        type: string
+      virtualAccountNo:
+        example: JXPEA6FFAAB9345C9016C3F
         type: string
     type: object
   clients.CreateDTO:
@@ -362,6 +417,80 @@ info:
   title: JaxPay API
   version: "1.0"
 paths:
+  /api/webhooks/espay/v1.0/transfer-va/inquiry:
+    post:
+      consumes:
+      - application/json
+      description: Path standar SNAP Espay untuk inquiry tagihan Virtual Account.
+        Logika sama dengan /callbacks/espay/inquiry.
+      parameters:
+      - description: Timestamp ISO-8601
+        in: header
+        name: X-TIMESTAMP
+        required: true
+        type: string
+      - description: SHA256withRSA signature (public key provider)
+        in: header
+        name: X-SIGNATURE
+        required: true
+        type: string
+      - description: Payload provider
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/callbacks.SNAPVAInquiryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+      summary: Espay SNAP VA inquiry
+      tags:
+      - Callbacks
+  /api/webhooks/espay/v1.0/transfer-va/payment:
+    post:
+      consumes:
+      - application/json
+      description: Path standar SNAP Espay untuk notifikasi pembayaran Virtual Account.
+        Logika sama dengan /callbacks/espay/payment.
+      parameters:
+      - description: Timestamp ISO-8601
+        in: header
+        name: X-TIMESTAMP
+        required: true
+        type: string
+      - description: SHA256withRSA signature (public key provider)
+        in: header
+        name: X-SIGNATURE
+        required: true
+        type: string
+      - description: Payload provider
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/callbacks.SNAPVAPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/callbacks.SNAPResponse'
+      summary: Espay SNAP VA payment notification
+      tags:
+      - Callbacks
   /callbacks/{provider}/inquiry:
     post:
       consumes:
