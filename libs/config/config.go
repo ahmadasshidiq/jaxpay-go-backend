@@ -10,16 +10,15 @@ import (
 )
 
 type EspayConfig struct {
-	BaseURL        string
-	PartnerID      string
-	MerchantID     string
-	ChannelID      string
-	PrivateKeyPath string
-	PublicKeyPath  string
-	Password       string
-	SignatureKey   string
-	MerchantPGURL  string
-	// AllowSelfSigned accepts callbacks signed with the merchant key (non-production testing).
+	BaseURL         string
+	PartnerID       string
+	MerchantID      string
+	ChannelID       string
+	PrivateKeyPath  string
+	PublicKeyPath   string
+	Password        string
+	SignatureKey    string
+	MerchantPGURL   string
 	AllowSelfSigned bool
 }
 

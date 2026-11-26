@@ -16,14 +16,12 @@ type callbackSigner interface {
 	SignCallback(method, path string, body []byte) (ts, sig, sts string, err error)
 }
 
-// SignRequest is the input for generating SNAP callback headers.
 type SignRequest struct {
 	Method string          `json:"method" example:"POST"`
 	Path   string          `json:"path" binding:"required" example:"/api/webhooks/espay/v1.0/transfer-va/payment"`
 	Body   json.RawMessage `json:"body" swaggertype:"object"`
 }
 
-// SignResponse holds the headers to send with the simulated callback.
 type SignResponse struct {
 	XTimestamp   string `json:"x_timestamp" example:"2026-11-26T10:00:00+07:00"`
 	XSignature   string `json:"x_signature"`

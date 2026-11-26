@@ -95,8 +95,6 @@ func (c *Client) verify(method, path string, body []byte, ts, signature string) 
 	return c.cfg.AllowSelfSigned && rsa.VerifyPKCS1v15(&c.privKey.PublicKey, crypto.SHA256, digest[:], sig) == nil
 }
 
-// SignCallback produces X-TIMESTAMP and X-SIGNATURE for simulating a SNAP callback.
-// Only usable when AllowSelfSigned is on, since Espay's private key is not held here.
 func (c *Client) SignCallback(method, path string, body []byte) (ts, sig, sts string, err error) {
 	if !c.cfg.AllowSelfSigned {
 		return "", "", "", errors.New("self-signed callbacks disabled")

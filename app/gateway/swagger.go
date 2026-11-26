@@ -26,8 +26,6 @@ func swaggerSpec(x *gin.Context) {
 	x.Data(http.StatusOK, "application/json; charset=utf-8", rootSNAPPaths([]byte(doc)))
 }
 
-// rootSNAPPaths serves SNAP paths (/api/webhooks/...) from the root while keeping
-// every other path under the original basePath.
 func rootSNAPPaths(doc []byte) []byte {
 	var spec map[string]any
 	if json.Unmarshal(doc, &spec) != nil {

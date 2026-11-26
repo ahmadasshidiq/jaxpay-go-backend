@@ -113,8 +113,10 @@ type CallbackEvent struct {
 type Bill struct {
 	CustomerName  string
 	CustomerEmail string
+	CustomerPhone string
 	Description   string
 	Amount        int64
+	Metadata      []byte
 	CreatedAt     time.Time
 	ExpiredAt     *time.Time
 }

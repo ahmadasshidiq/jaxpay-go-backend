@@ -64,7 +64,7 @@ func (s *CallbackService) process(ev *providers.CallbackEvent, log *models.Callb
 	log.PaymentID = &p.ID
 	expired := p.ExpiredAt != nil && time.Now().After(*p.ExpiredAt)
 	bill := &providers.Bill{
-		CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail, Description: p.Description,
+		CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail, CustomerPhone: p.CustomerPhone, Description: p.Description, Metadata: p.Metadata,
 		Amount: p.Amount, CreatedAt: p.CreatedAt, ExpiredAt: p.ExpiredAt,
 	}
 

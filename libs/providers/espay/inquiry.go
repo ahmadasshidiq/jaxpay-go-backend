@@ -41,11 +41,11 @@ func inquiryResponse(ev *providers.CallbackEvent, err error) (int, any) {
 	var in inquiryRequest
 	_ = json.Unmarshal(ev.Raw, &in)
 
-	code, rc, msg := 200, "2002400", "Successful"
+	code, rc, msg := 200, "2002400", "Success"
 	switch {
 	case err == nil && ev.Bill != nil:
 	case errors.Is(err, providers.ErrInvalidSignature):
-		code, rc, msg = 401, "4012400", "Unauthorized. [Signature]"
+		code, rc, msg = 401, "4012400", "Unauthorized Signature"
 	case errors.Is(err, providers.ErrInvalidRequest):
 		code, rc, msg = 400, "4002401", "Invalid Field Format"
 	case errors.Is(err, providers.ErrPaymentNotFound):
@@ -58,28 +58,33 @@ func inquiryResponse(ev *providers.CallbackEvent, err error) (int, any) {
 		code, rc, msg = 500, "5002400", "General Error"
 	}
 
-	va := map[string]any{
-		"partnerServiceId": in.PartnerServiceID,
-		"customerNo":       in.CustomerNo,
-		"virtualAccountNo": in.VirtualAccountNo,
-		"inquiryRequestId": in.InquiryRequestID,
+	b := ev.Bill
+	if rc != "2002400" || b == nil {
+		return code, inquiryErrorBody{ResponseCode: rc, ResponseMessage: msg}
 	}
-	if b := ev.Bill; rc == "2002400" {
-		desc := trunc(b.Description, 18)
-		if desc == "" {
-			desc = "Pembayaran"
-		}
-		info := map[string]any{"transactionDate": b.CreatedAt.In(wib).Format(tsLayout)}
-		if b.ExpiredAt != nil {
-			info["expiredDatetime"] = b.ExpiredAt.In(wib).Format(tsLayout)
-		}
-		va["virtualAccountName"] = b.CustomerName
-		va["virtualAccountEmail"] = b.CustomerEmail
-		va["totalAmount"] = formatAmount(b.Amount)
-		va["billDetails"] = []any{map[string]any{
-			"billDescription": map[string]string{"english": desc, "indonesia": desc},
-		}}
-		va["additionalInfo"] = info
+	desc := trunc(b.Description, 18)
+	if desc == "" {
+		desc = "Pembayaran"
 	}
-	return code, map[string]any{"responseCode": rc, "responseMessage": msg, "virtualAccountData": va}
+	var info inquiryAdditionalInfo
+	_ = json.Unmarshal(b.Metadata, &info)
+	info.TransactionDate = b.CreatedAt.In(wib).Format(tsLayout)
+	if info.Items == nil {
+		info.Items = []inquiryItem{}
+	}
+	if info.DataMerchant.ListBills == nil {
+		info.DataMerchant.ListBills = []inquiryBill{}
+	}
+	return code, inquiryBody{ResponseCode: rc, ResponseMessage: msg, VirtualAccountData: inquiryVADataFull{
+		PartnerServiceID:    in.PartnerServiceID,
+		CustomerNo:          in.CustomerNo,
+		VirtualAccountNo:    in.VirtualAccountNo,
+		VirtualAccountName:  b.CustomerName,
+		VirtualAccountEmail: b.CustomerEmail,
+		VirtualAccountPhone: b.CustomerPhone,
+		InquiryRequestID:    in.InquiryRequestID,
+		TotalAmount:         formatAmount(b.Amount),
+		BillDetails:         []inquiryBillDetail{{BillDescription: billDescription{English: desc, Indonesia: desc}}},
+		AdditionalInfo:      info,
+	}}
 }

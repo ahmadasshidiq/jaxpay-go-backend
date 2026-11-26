@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// RegisterSNAPRoutes registers Espay SNAP standard paths at the router root.
 func RegisterSNAPRoutes(router gin.IRouter, db *gorm.DB) {
 	c := NewController(NewService(db))
 	g := router.Group("/api/webhooks/espay/v1.0/transfer-va")
@@ -15,7 +14,6 @@ func RegisterSNAPRoutes(router gin.IRouter, db *gorm.DB) {
 	g.POST("/inquiry", c.SNAPVAInquiry)
 }
 
-// SNAPVAInquiryRequest is the Espay SNAP VA inquiry body (docs only).
 type SNAPVAInquiryRequest struct {
 	PartnerServiceID string `json:"partnerServiceId" example:"   Espay"`
 	CustomerNo       string `json:"customerNo" example:"SGWJAXERTEKNOINDO"`
@@ -24,18 +22,15 @@ type SNAPVAInquiryRequest struct {
 	InquiryRequestID string `json:"inquiryRequestId" example:"INQ-20261112-0006"`
 }
 
-// SNAPAmount is a SNAP amount object (docs only).
 type SNAPAmount struct {
 	Value    string `json:"value" example:"10000.00"`
 	Currency string `json:"currency" example:"IDR"`
 }
 
-// SNAPVAPaymentAdditionalInfo holds the Espay transaction status (docs only).
 type SNAPVAPaymentAdditionalInfo struct {
 	TransactionStatus string `json:"transactionStatus" example:"S"`
 }
 
-// SNAPVAPaymentRequest is the Espay SNAP VA payment notification body (docs only).
 type SNAPVAPaymentRequest struct {
 	PartnerServiceID string                      `json:"partnerServiceId" example:"   Espay"`
 	CustomerNo       string                      `json:"customerNo" example:"SGWJAXERTEKNOINDO"`
