@@ -348,6 +348,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/callbacks/{provider}/sign": {
+            "post": {
+                "description": "Hanya tersedia di non-production. Signature dibuat dengan private key merchant; callback non-production menerima signature ini selain signature Espay. Kirim body callback persis (atau versi minified-nya) bersama header yang dihasilkan, dalam 5 menit.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Callbacks"
+                ],
+                "summary": "Generate X-TIMESTAMP \u0026 X-SIGNATURE untuk simulasi callback SNAP",
+                "parameters": [
+                    {
+                        "enum": [
+                            "espay"
+                        ],
+                        "type": "string",
+                        "description": "Provider",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Method, path, dan body callback",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SignRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/callbacks.SignResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/clients": {
             "get": {
                 "security": [
@@ -1977,6 +2021,40 @@ const docTemplate = `{
                 "virtualAccountNo": {
                     "type": "string",
                     "example": "JXPEA6FFAAB9345C9016C3F"
+                }
+            }
+        },
+        "callbacks.SignRequest": {
+            "type": "object",
+            "required": [
+                "path"
+            ],
+            "properties": {
+                "body": {
+                    "type": "object"
+                },
+                "method": {
+                    "type": "string",
+                    "example": "POST"
+                },
+                "path": {
+                    "type": "string",
+                    "example": "/api/webhooks/espay/v1.0/transfer-va/payment"
+                }
+            }
+        },
+        "callbacks.SignResponse": {
+            "type": "object",
+            "properties": {
+                "string_to_sign": {
+                    "type": "string"
+                },
+                "x_signature": {
+                    "type": "string"
+                },
+                "x_timestamp": {
+                    "type": "string",
+                    "example": "2026-11-26T10:00:00+07:00"
                 }
             }
         },

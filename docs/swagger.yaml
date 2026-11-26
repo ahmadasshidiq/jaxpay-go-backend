@@ -62,6 +62,29 @@ definitions:
         example: JXPEA6FFAAB9345C9016C3F
         type: string
     type: object
+  callbacks.SignRequest:
+    properties:
+      body:
+        type: object
+      method:
+        example: POST
+        type: string
+      path:
+        example: /api/webhooks/espay/v1.0/transfer-va/payment
+        type: string
+    required:
+    - path
+    type: object
+  callbacks.SignResponse:
+    properties:
+      string_to_sign:
+        type: string
+      x_signature:
+        type: string
+      x_timestamp:
+        example: "2026-11-26T10:00:00+07:00"
+        type: string
+    type: object
   clients.CreateDTO:
     properties:
       callback_url:
@@ -646,6 +669,38 @@ paths:
               type: string
             type: object
       summary: Callback settlement dari provider
+      tags:
+      - Callbacks
+  /callbacks/{provider}/sign:
+    post:
+      consumes:
+      - application/json
+      description: Hanya tersedia di non-production. Signature dibuat dengan private
+        key merchant; callback non-production menerima signature ini selain signature
+        Espay. Kirim body callback persis (atau versi minified-nya) bersama header
+        yang dihasilkan, dalam 5 menit.
+      parameters:
+      - description: Provider
+        enum:
+        - espay
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Method, path, dan body callback
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/callbacks.SignRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/callbacks.SignResponse'
+      summary: Generate X-TIMESTAMP & X-SIGNATURE untuk simulasi callback SNAP
       tags:
       - Callbacks
   /clients:

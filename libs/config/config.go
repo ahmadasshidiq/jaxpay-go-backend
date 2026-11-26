@@ -19,6 +19,8 @@ type EspayConfig struct {
 	Password       string
 	SignatureKey   string
 	MerchantPGURL  string
+	// AllowSelfSigned accepts callbacks signed with the merchant key (non-production testing).
+	AllowSelfSigned bool
 }
 
 func (c EspayConfig) Enabled() bool { return c.BaseURL != "" && c.PartnerID != "" }
@@ -68,15 +70,16 @@ func Get() *Config {
 				AllowHeaders: append(splitList(defaultCORSHeaders), envList("CORS_EXTRA_HEADERS", "")...),
 			},
 			Espay: EspayConfig{
-				BaseURL:        env("ESPAY_BASE_URL", ""),
-				PartnerID:      env("ESPAY_PARTNER_ID", ""),
-				MerchantID:     env("ESPAY_MERCHANT_ID", ""),
-				ChannelID:      env("ESPAY_CHANNEL_ID", ""),
-				PrivateKeyPath: env("ESPAY_PRIVATE_KEY_PATH", ""),
-				PublicKeyPath:  env("ESPAY_PUBLIC_KEY_PATH", ""),
-				Password:       env("ESPAY_PASSWORD", ""),
-				SignatureKey:   env("ESPAY_SIGNATURE_KEY", ""),
-				MerchantPGURL:  env("ESPAY_MERCHANTPG_URL", ""),
+				BaseURL:         env("ESPAY_BASE_URL", ""),
+				PartnerID:       env("ESPAY_PARTNER_ID", ""),
+				MerchantID:      env("ESPAY_MERCHANT_ID", ""),
+				ChannelID:       env("ESPAY_CHANNEL_ID", ""),
+				PrivateKeyPath:  env("ESPAY_PRIVATE_KEY_PATH", ""),
+				PublicKeyPath:   env("ESPAY_PUBLIC_KEY_PATH", ""),
+				Password:        env("ESPAY_PASSWORD", ""),
+				SignatureKey:    env("ESPAY_SIGNATURE_KEY", ""),
+				MerchantPGURL:   env("ESPAY_MERCHANTPG_URL", ""),
+				AllowSelfSigned: env("APP_ENV", "development") != "production",
 			},
 		}
 	})
