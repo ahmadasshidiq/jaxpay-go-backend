@@ -345,6 +345,9 @@ definitions:
         type: string
       provider_data:
         type: object
+      provider_ref:
+        example: JXPD6BDB5DDCBD3D5024C43
+        type: string
       qr_string:
         type: string
       qr_url:

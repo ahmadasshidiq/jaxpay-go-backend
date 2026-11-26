@@ -38,6 +38,7 @@ type PaymentResponse struct {
 	ReferenceID   string               `json:"reference_id"`
 	Method        string               `json:"method"`
 	Provider      string               `json:"provider"`
+	ProviderRef   string               `json:"provider_ref,omitempty" example:"JXPD6BDB5DDCBD3D5024C43"`
 	Amount        int64                `json:"amount"`
 	Currency      string               `json:"currency"`
 	Status        models.PaymentStatus `json:"status"`
@@ -65,7 +66,7 @@ type VABankResponse struct {
 
 func toResponse(p *models.Payment) PaymentResponse {
 	return PaymentResponse{
-		ID: p.ID, ReferenceID: p.ReferenceID, Method: p.Method, Provider: p.Provider,
+		ID: p.ID, ReferenceID: p.ReferenceID, Method: p.Method, Provider: p.Provider, ProviderRef: p.ProviderRef,
 		Amount: p.Amount, Currency: p.Currency, Status: p.Status, VANumber: p.VANumber, BankCode: p.BankCode, ProductCode: p.ProductCode, RedirectURL: p.RedirectURL, QRString: p.QRString, QRURL: p.QRURL,
 		CustomerName: p.CustomerName, CustomerEmail: p.CustomerEmail, Description: p.Description,
 		Metadata: p.Metadata, ProviderData: p.ProviderData, ExpiredAt: p.ExpiredAt, PaidAt: p.PaidAt, CreatedAt: p.CreatedAt,

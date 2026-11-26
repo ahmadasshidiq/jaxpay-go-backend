@@ -2429,6 +2429,10 @@ const docTemplate = `{
                 "provider_data": {
                     "type": "object"
                 },
+                "provider_ref": {
+                    "type": "string",
+                    "example": "JXPD6BDB5DDCBD3D5024C43"
+                },
                 "qr_string": {
                     "type": "string"
                 },
