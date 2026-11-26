@@ -8,7 +8,7 @@ func (m money) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.FormatFloat(float64(m), 'f', 2, 64)), nil
 }
 
-type inquiryErrorBody struct {
+type snapErrorBody struct {
 	ResponseCode    string `json:"responseCode"`
 	ResponseMessage string `json:"responseMessage"`
 }

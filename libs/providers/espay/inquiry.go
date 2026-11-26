@@ -60,7 +60,7 @@ func inquiryResponse(ev *providers.CallbackEvent, err error) (int, any) {
 
 	b := ev.Bill
 	if rc != "2002400" || b == nil {
-		return code, inquiryErrorBody{ResponseCode: rc, ResponseMessage: msg}
+		return code, snapErrorBody{ResponseCode: rc, ResponseMessage: msg}
 	}
 	desc := trunc(b.Description, 18)
 	if desc == "" {

@@ -3,6 +3,7 @@ package espay
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/json"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -36,11 +37,15 @@ func TestVAPaymentCallback(t *testing.T) {
 	}
 	ev.Bill = &providers.Bill{CustomerName: "Budi"}
 	code, v := c.CallbackResponse(ev, nil)
-	res := v.(map[string]any)
-	va := res["virtualAccountData"].(map[string]any)
-	info := res["additionalInfo"].(map[string]string)
-	if code != 200 || res["responseCode"] != "2002500" || va["virtualAccountName"] != "Budi" || va["paymentRequestId"] != "pay-1" || len(info["reconcileId"]) != 32 || info["reconcileDatetime"] == "" {
-		t.Fatalf("response %d %+v", code, res)
+	body := v.(vaPaymentBody)
+	if len(body.AdditionalInfo.ReconcileID) != 32 || body.AdditionalInfo.ReconcileDatetime == "" {
+		t.Fatalf("reconcile: %+v", body.AdditionalInfo)
+	}
+	body.AdditionalInfo = reconcileInfo{}
+	got, _ := json.Marshal(body)
+	want := `{"responseCode":"2002500","responseMessage":"Success","virtualAccountData":{"partnerServiceId":" Espay","customerNo":"SGW","virtualAccountNo":"JXP1","virtualAccountName":"Budi","paymentRequestId":"pay-1","totalAmount":{"value":"150000.00","currency":"IDR"},"billDetails":[{"billDescription":{"english":"Pembayaran","indonesia":"Pembayaran"}}]},"additionalInfo":{"reconcileId":"","reconcileDatetime":""}}`
+	if code != 200 || string(got) != want {
+		t.Fatalf("response %d\n got %s\nwant %s", code, got, want)
 	}
 
 	for s, want := range map[string]models.PaymentStatus{"F": models.StatusFailed, "IP": models.StatusPending, "SP": models.StatusPending, "HP": models.StatusPending} {
@@ -55,7 +60,8 @@ func TestVAPaymentCallback(t *testing.T) {
 	if e != providers.ErrInvalidSignature {
 		t.Fatalf("bad signature: %v", e)
 	}
-	if _, v := c.CallbackResponse(ev, e); v.(map[string]any)["responseCode"] != "4012500" {
-		t.Fatal("signature code")
+	code, v = c.CallbackResponse(ev, e)
+	if got, _ := json.Marshal(v); code != 401 || string(got) != `{"responseCode":"4012500","responseMessage":"Unauthorized Signature"}` {
+		t.Fatalf("signature error: %d %s", code, got)
 	}
 }

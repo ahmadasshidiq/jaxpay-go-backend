@@ -68,11 +68,11 @@ func vaPaymentResponse(ev *providers.CallbackEvent, err error) (int, any) {
 	var in vaPaymentRequest
 	_ = json.Unmarshal(ev.Raw, &in)
 
-	code, rc, msg := 200, "2002500", "Successful"
+	code, rc, msg := 200, "2002500", "Success"
 	switch {
 	case err == nil:
 	case errors.Is(err, providers.ErrInvalidSignature):
-		code, rc, msg = 401, "4012500", "Unauthorized. [Signature]"
+		code, rc, msg = 401, "4012500", "Unauthorized Signature"
 	case errors.Is(err, providers.ErrInvalidRequest):
 		code, rc, msg = 400, "4002501", "Invalid Field Format"
 	case errors.Is(err, providers.ErrPaymentNotFound):
@@ -85,33 +85,61 @@ func vaPaymentResponse(ev *providers.CallbackEvent, err error) (int, any) {
 		code, rc, msg = 500, "5002500", "General Error"
 	}
 
-	va := map[string]any{
-		"partnerServiceId": in.PartnerServiceID,
-		"customerNo":       in.CustomerNo,
-		"virtualAccountNo": in.VirtualAccountNo,
-		"paymentRequestId": in.PaymentRequestID,
+	if rc != "2002500" {
+		return code, snapErrorBody{ResponseCode: rc, ResponseMessage: msg}
 	}
+	var name, desc string
+	total := amount{Currency: "IDR"}
 	if in.TotalAmount != nil {
-		va["totalAmount"] = in.TotalAmount
+		total = *in.TotalAmount
 	}
 	if b := ev.Bill; b != nil {
-		desc := trunc(b.Description, 18)
-		if desc == "" {
-			desc = "Pembayaran"
+		name, desc = b.CustomerName, trunc(b.Description, 18)
+		if in.TotalAmount == nil {
+			total = formatAmount(b.Amount)
 		}
-		va["virtualAccountName"] = b.CustomerName
-		va["billDetails"] = []any{map[string]any{
-			"billDescription": map[string]string{"english": desc, "indonesia": desc},
-		}}
+	}
+	if desc == "" {
+		desc = "Pembayaran"
 	}
 	h := sha256.Sum256([]byte(in.PaymentRequestID))
-	return code, map[string]any{
-		"responseCode":       rc,
-		"responseMessage":    msg,
-		"virtualAccountData": va,
-		"additionalInfo": map[string]string{
-			"reconcileId":       hex.EncodeToString(h[:16]),
-			"reconcileDatetime": time.Now().In(wib).Format(tsLayout),
+	return code, vaPaymentBody{
+		ResponseCode:    rc,
+		ResponseMessage: msg,
+		VirtualAccountData: vaPaymentData{
+			PartnerServiceID:   in.PartnerServiceID,
+			CustomerNo:         in.CustomerNo,
+			VirtualAccountNo:   in.VirtualAccountNo,
+			VirtualAccountName: name,
+			PaymentRequestID:   in.PaymentRequestID,
+			TotalAmount:        total,
+			BillDetails:        []inquiryBillDetail{{BillDescription: billDescription{English: desc, Indonesia: desc}}},
+		},
+		AdditionalInfo: reconcileInfo{
+			ReconcileID:       hex.EncodeToString(h[:16]),
+			ReconcileDatetime: time.Now().In(wib).Format(tsLayout),
 		},
 	}
+}
+
+type vaPaymentBody struct {
+	ResponseCode       string        `json:"responseCode"`
+	ResponseMessage    string        `json:"responseMessage"`
+	VirtualAccountData vaPaymentData `json:"virtualAccountData"`
+	AdditionalInfo     reconcileInfo `json:"additionalInfo"`
+}
+
+type vaPaymentData struct {
+	PartnerServiceID   string              `json:"partnerServiceId"`
+	CustomerNo         string              `json:"customerNo"`
+	VirtualAccountNo   string              `json:"virtualAccountNo"`
+	VirtualAccountName string              `json:"virtualAccountName"`
+	PaymentRequestID   string              `json:"paymentRequestId"`
+	TotalAmount        amount              `json:"totalAmount"`
+	BillDetails        []inquiryBillDetail `json:"billDetails"`
+}
+
+type reconcileInfo struct {
+	ReconcileID       string `json:"reconcileId"`
+	ReconcileDatetime string `json:"reconcileDatetime"`
 }

@@ -38,7 +38,7 @@ func TestInquiryCallback(t *testing.T) {
 		t.Fatalf("response\n got %s\nwant %s", got, want)
 	}
 
-	if _, v := c.CallbackResponse(ev, providers.ErrAlreadyPaid); v.(inquiryErrorBody).ResponseCode != "4042414" {
+	if _, v := c.CallbackResponse(ev, providers.ErrAlreadyPaid); v.(snapErrorBody).ResponseCode != "4042414" {
 		t.Fatal("paid bill code")
 	}
 	code, v = c.CallbackResponse(ev, providers.ErrInvalidSignature)
