@@ -36,19 +36,102 @@ definitions:
     type: object
   callbacks.SNAPVAPaymentAdditionalInfo:
     properties:
+      approvalCode:
+        example: "220822000288"
+        type: string
+      cardExpiry:
+        example: "202612"
+        type: string
+      cardType:
+        example: credit
+        type: string
+      creditTo:
+        example: 665050XXXX
+        type: string
+      creditToBank:
+        example: "002"
+        type: string
+      creditToName:
+        example: BRI
+        type: string
+      debitFrom:
+        example: 16095902XXXX
+        type: string
+      debitFromBank:
+        example: "002"
+        type: string
+      debitFromName:
+        example: BRI
+        type: string
+      feeType:
+        example: S
+        type: string
+      memberCode:
+        example: SGWJAXERTEKNOINDO
+        type: string
+      message:
+        $ref: '#/definitions/callbacks.SNAPVAPaymentMessage'
+      paymentRef:
+        example: ESP1661161958ZQEG
+        type: string
+      paymentRemark:
+        example: Bayar
+        type: string
+      productCode:
+        example: BRIATM
+        type: string
+      productValue:
+        example: 16095902XXXX
+        type: string
+      rrn:
+        example: "220822000288"
+        type: string
+      terminalId:
+        example: "10380579"
+        type: string
+      token:
+        example: "2023011167618274122"
+        type: string
+      traceNumber:
+        example: "7999999901"
+        type: string
       transactionStatus:
         example: S
+        type: string
+      txFee:
+        example: "4400"
+        type: string
+      userId:
+        example: 2306291049P89VWB
+        type: string
+    type: object
+  callbacks.SNAPVAPaymentBillDetail:
+    properties:
+      billNo:
+        example: invoiceid0001
+        type: string
+    type: object
+  callbacks.SNAPVAPaymentMessage:
+    properties:
+      CHANNEL_FLAG:
+        example: W
         type: string
     type: object
   callbacks.SNAPVAPaymentRequest:
     properties:
       additionalInfo:
         $ref: '#/definitions/callbacks.SNAPVAPaymentAdditionalInfo'
+      billDetails:
+        items:
+          $ref: '#/definitions/callbacks.SNAPVAPaymentBillDetail'
+        type: array
       customerNo:
         example: SGWJAXERTEKNOINDO
         type: string
+      paidAmount:
+        $ref: '#/definitions/callbacks.SNAPAmount'
       partnerServiceId:
-        example: '   Espay'
+        example: ' Espay'
         type: string
       paymentRequestId:
         example: PAY-20261112-0006
@@ -57,6 +140,9 @@ definitions:
         $ref: '#/definitions/callbacks.SNAPAmount'
       trxDateTime:
         example: "2026-11-12T09:35:00+07:00"
+        type: string
+      trxId:
+        example: ESP1661161958ZQEG
         type: string
       virtualAccountNo:
         example: JXPEA6FFAAB9345C9016C3F

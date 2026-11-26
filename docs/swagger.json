@@ -1980,9 +1980,114 @@
         "callbacks.SNAPVAPaymentAdditionalInfo": {
             "type": "object",
             "properties": {
+                "approvalCode": {
+                    "type": "string",
+                    "example": "220822000288"
+                },
+                "cardExpiry": {
+                    "type": "string",
+                    "example": "202612"
+                },
+                "cardType": {
+                    "type": "string",
+                    "example": "credit"
+                },
+                "creditTo": {
+                    "type": "string",
+                    "example": "665050XXXX"
+                },
+                "creditToBank": {
+                    "type": "string",
+                    "example": "002"
+                },
+                "creditToName": {
+                    "type": "string",
+                    "example": "BRI"
+                },
+                "debitFrom": {
+                    "type": "string",
+                    "example": "16095902XXXX"
+                },
+                "debitFromBank": {
+                    "type": "string",
+                    "example": "002"
+                },
+                "debitFromName": {
+                    "type": "string",
+                    "example": "BRI"
+                },
+                "feeType": {
+                    "type": "string",
+                    "example": "S"
+                },
+                "memberCode": {
+                    "type": "string",
+                    "example": "SGWJAXERTEKNOINDO"
+                },
+                "message": {
+                    "$ref": "#/definitions/callbacks.SNAPVAPaymentMessage"
+                },
+                "paymentRef": {
+                    "type": "string",
+                    "example": "ESP1661161958ZQEG"
+                },
+                "paymentRemark": {
+                    "type": "string",
+                    "example": "Bayar"
+                },
+                "productCode": {
+                    "type": "string",
+                    "example": "BRIATM"
+                },
+                "productValue": {
+                    "type": "string",
+                    "example": "16095902XXXX"
+                },
+                "rrn": {
+                    "type": "string",
+                    "example": "220822000288"
+                },
+                "terminalId": {
+                    "type": "string",
+                    "example": "10380579"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "2023011167618274122"
+                },
+                "traceNumber": {
+                    "type": "string",
+                    "example": "7999999901"
+                },
                 "transactionStatus": {
                     "type": "string",
                     "example": "S"
+                },
+                "txFee": {
+                    "type": "string",
+                    "example": "4400"
+                },
+                "userId": {
+                    "type": "string",
+                    "example": "2306291049P89VWB"
+                }
+            }
+        },
+        "callbacks.SNAPVAPaymentBillDetail": {
+            "type": "object",
+            "properties": {
+                "billNo": {
+                    "type": "string",
+                    "example": "invoiceid0001"
+                }
+            }
+        },
+        "callbacks.SNAPVAPaymentMessage": {
+            "type": "object",
+            "properties": {
+                "CHANNEL_FLAG": {
+                    "type": "string",
+                    "example": "W"
                 }
             }
         },
@@ -1992,13 +2097,22 @@
                 "additionalInfo": {
                     "$ref": "#/definitions/callbacks.SNAPVAPaymentAdditionalInfo"
                 },
+                "billDetails": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/callbacks.SNAPVAPaymentBillDetail"
+                    }
+                },
                 "customerNo": {
                     "type": "string",
                     "example": "SGWJAXERTEKNOINDO"
                 },
+                "paidAmount": {
+                    "$ref": "#/definitions/callbacks.SNAPAmount"
+                },
                 "partnerServiceId": {
                     "type": "string",
-                    "example": "   Espay"
+                    "example": " Espay"
                 },
                 "paymentRequestId": {
                     "type": "string",
@@ -2010,6 +2124,10 @@
                 "trxDateTime": {
                     "type": "string",
                     "example": "2026-11-12T09:35:00+07:00"
+                },
+                "trxId": {
+                    "type": "string",
+                    "example": "ESP1661161958ZQEG"
                 },
                 "virtualAccountNo": {
                     "type": "string",

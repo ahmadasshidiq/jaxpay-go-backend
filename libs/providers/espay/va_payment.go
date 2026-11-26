@@ -17,12 +17,41 @@ type vaPaymentRequest struct {
 	PartnerServiceID string  `json:"partnerServiceId"`
 	CustomerNo       string  `json:"customerNo"`
 	VirtualAccountNo string  `json:"virtualAccountNo"`
+	TrxID            string  `json:"trxId"`
 	PaymentRequestID string  `json:"paymentRequestId"`
+	PaidAmount       *amount `json:"paidAmount"`
 	TotalAmount      *amount `json:"totalAmount"`
 	TrxDateTime      string  `json:"trxDateTime"`
 	AdditionalInfo   struct {
 		TransactionStatus string `json:"transactionStatus"`
+		MemberCode        string `json:"memberCode"`
+		DebitFrom         string `json:"debitFrom"`
+		DebitFromName     string `json:"debitFromName"`
+		DebitFromBank     string `json:"debitFromBank"`
+		CreditTo          string `json:"creditTo"`
+		CreditToName      string `json:"creditToName"`
+		CreditToBank      string `json:"creditToBank"`
+		ProductCode       string `json:"productCode"`
+		ProductValue      string `json:"productValue"`
+		Message           struct {
+			ChannelFlag string `json:"CHANNEL_FLAG"`
+		} `json:"message"`
+		FeeType       string `json:"feeType"`
+		TxFee         string `json:"txFee"`
+		PaymentRef    string `json:"paymentRef"`
+		PaymentRemark string `json:"paymentRemark"`
+		RRN           string `json:"rrn"`
+		ApprovalCode  string `json:"approvalCode"`
+		Token         string `json:"token"`
+		UserID        string `json:"userId"`
+		TraceNumber   string `json:"traceNumber"`
+		TerminalID    string `json:"terminalId"`
+		CardType      string `json:"cardType"`
+		CardExpiry    string `json:"cardExpiry"`
 	} `json:"additionalInfo"`
+	BillDetails []struct {
+		BillNo string `json:"billNo"`
+	} `json:"billDetails"`
 }
 
 func isVAPayment(body []byte) bool {

@@ -27,18 +27,51 @@ type SNAPAmount struct {
 	Currency string `json:"currency" example:"IDR"`
 }
 
+type SNAPVAPaymentMessage struct {
+	ChannelFlag string `json:"CHANNEL_FLAG" example:"W"`
+}
+
 type SNAPVAPaymentAdditionalInfo struct {
-	TransactionStatus string `json:"transactionStatus" example:"S"`
+	TransactionStatus string               `json:"transactionStatus" example:"S"`
+	MemberCode        string               `json:"memberCode" example:"SGWJAXERTEKNOINDO"`
+	DebitFrom         string               `json:"debitFrom" example:"16095902XXXX"`
+	DebitFromName     string               `json:"debitFromName" example:"BRI"`
+	DebitFromBank     string               `json:"debitFromBank" example:"002"`
+	CreditTo          string               `json:"creditTo" example:"665050XXXX"`
+	CreditToName      string               `json:"creditToName" example:"BRI"`
+	CreditToBank      string               `json:"creditToBank" example:"002"`
+	ProductCode       string               `json:"productCode" example:"BRIATM"`
+	ProductValue      string               `json:"productValue" example:"16095902XXXX"`
+	Message           SNAPVAPaymentMessage `json:"message"`
+	FeeType           string               `json:"feeType" example:"S"`
+	TxFee             string               `json:"txFee" example:"4400"`
+	PaymentRef        string               `json:"paymentRef" example:"ESP1661161958ZQEG"`
+	PaymentRemark     string               `json:"paymentRemark" example:"Bayar"`
+	RRN               string               `json:"rrn" example:"220822000288"`
+	ApprovalCode      string               `json:"approvalCode" example:"220822000288"`
+	Token             string               `json:"token" example:"2023011167618274122"`
+	UserID            string               `json:"userId" example:"2306291049P89VWB"`
+	TraceNumber       string               `json:"traceNumber" example:"7999999901"`
+	TerminalID        string               `json:"terminalId" example:"10380579"`
+	CardType          string               `json:"cardType" example:"credit"`
+	CardExpiry        string               `json:"cardExpiry" example:"202612"`
+}
+
+type SNAPVAPaymentBillDetail struct {
+	BillNo string `json:"billNo" example:"invoiceid0001"`
 }
 
 type SNAPVAPaymentRequest struct {
-	PartnerServiceID string                      `json:"partnerServiceId" example:"   Espay"`
+	PartnerServiceID string                      `json:"partnerServiceId" example:" Espay"`
 	CustomerNo       string                      `json:"customerNo" example:"SGWJAXERTEKNOINDO"`
 	VirtualAccountNo string                      `json:"virtualAccountNo" example:"JXPEA6FFAAB9345C9016C3F"`
+	TrxID            string                      `json:"trxId" example:"ESP1661161958ZQEG"`
 	PaymentRequestID string                      `json:"paymentRequestId" example:"PAY-20261112-0006"`
+	PaidAmount       SNAPAmount                  `json:"paidAmount"`
 	TotalAmount      SNAPAmount                  `json:"totalAmount"`
 	TrxDateTime      string                      `json:"trxDateTime" example:"2026-11-12T09:35:00+07:00"`
 	AdditionalInfo   SNAPVAPaymentAdditionalInfo `json:"additionalInfo"`
+	BillDetails      []SNAPVAPaymentBillDetail   `json:"billDetails"`
 }
 
 // SNAPVAPayment godoc
